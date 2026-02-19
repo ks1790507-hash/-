@@ -19,28 +19,29 @@ let talkLines = [];
 let talkIndex = 0;
 const messageBox = document.getElementById("messageBox");
 
-// 通常机
+// 通常机の会話
 const deskConversation = [
   "机の中を調べた。",
+  "プリントが入っている。",
   "特に変わったものはない。"
 ];
 
-// ⭐ 特別机
+// ⭐ 特別机の会話
 const specialDeskConversation = [
-  "机の中になにか入ってる",
-  "佐藤という人の手紙だ",
-  "字が汚くて読めない…"
+  "この机は少し違う…",
+  "引き出しの奥に鍵がある！",
+  "『理科準備室』と書いてある。"
 ];
 
-// ⭐ 特別机の座標（row, col）
-const specialDesk = {
-  row: 10,
-  col: 12
+// ⭐ 特別机の座標（ここを後で調整）
+let specialDesk = {
+  row: 3,
+  col: 8
 };
 
-// =================
-// MAP 読み込み
-// =================
+// =======================
+// MAP読み込み
+// =======================
 fetch("map.json")
   .then(res => res.json())
   .then(data => {
@@ -49,9 +50,9 @@ fetch("map.json")
     draw();
   });
 
-// =================
+// =======================
 // マップ生成
-// =================
+// =======================
 function createMap(){
   blocks = [];
 
@@ -95,9 +96,9 @@ function createBlock(x,y,color,solid){
   });
 }
 
-// =================
+// =======================
 // 描画
-// =================
+// =======================
 function draw(){
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -116,9 +117,9 @@ function draw(){
   requestAnimationFrame(draw);
 }
 
-// =================
+// =======================
 // 移動判定
-// =================
+// =======================
 function canMove(newX,newY){
   for(let b of blocks){
     if(b.solid){
@@ -135,7 +136,7 @@ function canMove(newX,newY){
   return true;
 }
 
-// タイル取得
+// タイル位置取得
 function getTilePosition(x,y){
   return {
     col: x / TILE,
@@ -143,9 +144,9 @@ function getTilePosition(x,y){
   };
 }
 
-// =================
-// 会話
-// =================
+// =======================
+// 会話処理
+// =======================
 function startTalk(lines){
   isTalking = true;
   talkLines = lines;
@@ -162,13 +163,13 @@ function endTalk(){
   isTalking = false;
   messageBox.style.display = "none";
 }
-console.log("row:", pos.row, "col:", pos.col);
 
-// =================
+// =======================
 // キー操作
-// =================
+// =======================
 document.addEventListener("keydown", e=>{
 
+  // 会話中
   if(isTalking){
     if(e.code === "Space"){
       talkIndex++;
@@ -196,15 +197,20 @@ document.addEventListener("keydown", e=>{
   else{
     const pos = getTilePosition(newX,newY);
 
-    // ⭐ 特別机判定
-    if(pos.row === specialDesk.row && pos.col === specialDesk.col){
-      startTalk(specialDeskConversation);
-    }
-    else{
-      const tile = mapData[pos.row]?.[pos.col];
-      if(tile === "机"){
+    // ⭐ デバッグ表示（F12 → Consoleで確認）
+    console.log("row:", pos.row, "col:", pos.col);
+
+    const tile = mapData[pos.row]?.[pos.col];
+
+    if(tile === "机"){
+
+      // ⭐ 特別机判定
+      if(pos.row === specialDesk.row && pos.col === specialDesk.col){
+        startTalk(specialDeskConversation);
+      }else{
         startTalk(deskConversation);
       }
+
     }
   }
 

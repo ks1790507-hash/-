@@ -82,6 +82,9 @@ function createMap(){
 
       if(tile === "壁") createBlock(x,y,"gray",true);
       if(tile === "机") createBlock(x,y,"brown",true);
+      if(tile === "よ") createBlock(x,y,"brown",true);
+      if(tile === "特別机") createBlock(x,y,"brown",true);
+      if(tile === "A") createBlock(x,y,"brown",true);
       if(tile === "黒板") createBlock(x,y,"green",true);
       if(tile === "教卓") createBlock(x,y,"darkred",true);
       if(tile === "扉") createBlock(x,y,"orange",true);
@@ -103,9 +106,16 @@ function draw(){
   ctx.fillStyle = "#f5f5dc";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // カメラ計算（プレイヤー中心）
-  cameraX = player.x - canvas.width/2 + player.size/2;
-  cameraY = player.y - canvas.height/2 + player.size/2;
+  // ===== マップごとにカメラ切替 =====
+  if(currentMap === "map"){ 
+    // 教室 → 固定カメラ
+    cameraX = 0;
+    cameraY = 0;
+  }else{
+    // 廊下 → 追従カメラ
+    cameraX = player.x - canvas.width/2 + player.size/2;
+    cameraY = player.y - canvas.height/2 + player.size/2;
+  }
 
   blocks.forEach(b=>{
     ctx.fillStyle = b.color;
@@ -127,7 +137,6 @@ function draw(){
 
   requestAnimationFrame(draw);
 }
-draw();
 
 // =====================
 // 判定

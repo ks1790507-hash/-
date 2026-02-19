@@ -162,7 +162,7 @@ function getTileAt(x,y){
   const row = Math.floor(y / TILE);
   return mapData[row]?.[col];
 }
-
+draw();
 // =====================
 // キー操作
 // =====================

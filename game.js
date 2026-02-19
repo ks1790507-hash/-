@@ -19,11 +19,25 @@ let talkLines = [];
 let talkIndex = 0;
 const messageBox = document.getElementById("messageBox");
 
+// 通常机
 const deskConversation = [
   "机の中を調べた。",
   "プリントが入っている。",
   "特に変わったものはない。"
 ];
+
+// ⭐ 特別机
+const specialDeskConversation = [
+  "この机は少し違う…",
+  "引き出しの奥に鍵がある！",
+  "『理科準備室』と書いてある。"
+];
+
+// ⭐ 特別机の座標（row, col）
+const specialDesk = {
+  row: 3,
+  col: 8
+};
 
 // =================
 // MAP 読み込み
@@ -122,10 +136,12 @@ function canMove(newX,newY){
   return true;
 }
 
-function getTileAt(x,y){
-  const col = x / TILE;
-  const row = y / TILE;
-  return mapData[row]?.[col];
+// タイル取得
+function getTilePosition(x,y){
+  return {
+    col: x / TILE,
+    row: y / TILE
+  };
 }
 
 // =================
@@ -176,10 +192,19 @@ document.addEventListener("keydown", e=>{
   if(canMove(newX,newY)){
     player.x = newX;
     player.y = newY;
-  }else{
-    const tile = getTileAt(newX,newY);
-    if(tile === "机"){
-      startTalk(deskConversation);
+  }
+  else{
+    const pos = getTilePosition(newX,newY);
+
+    // ⭐ 特別机判定
+    if(pos.row === specialDesk.row && pos.col === specialDesk.col){
+      startTalk(specialDeskConversation);
+    }
+    else{
+      const tile = mapData[pos.row]?.[pos.col];
+      if(tile === "机"){
+        startTalk(deskConversation);
+      }
     }
   }
 

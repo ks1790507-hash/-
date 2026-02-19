@@ -13,35 +13,35 @@ const player = {
   color: "blue"
 };
 
-// 会話
+// 会話管理
 let isTalking = false;
 let talkLines = [];
 let talkIndex = 0;
 const messageBox = document.getElementById("messageBox");
 
-// 通常机の会話
+// 通常机
 const deskConversation = [
   "机の中を調べた。",
   "プリントが入っている。",
   "特に変わったものはない。"
 ];
 
-// ⭐ 特別机の会話
+// ⭐ 特別机
 const specialDeskConversation = [
   "この机は少し違う…",
   "引き出しの奥に鍵がある！",
   "『理科準備室』と書いてある。"
 ];
 
-// ⭐ 特別机の座標（ここを後で調整）
+// ⭐ 特別机の座標（ここを後でConsoleで合わせる）
 let specialDesk = {
-  row: 8,
-  col: 11
+  row: 4,
+  col: 8
 };
 
-// =======================
+// =====================
 // MAP読み込み
-// =======================
+// =====================
 fetch("map.json")
   .then(res => res.json())
   .then(data => {
@@ -50,9 +50,9 @@ fetch("map.json")
     draw();
   });
 
-// =======================
+// =====================
 // マップ生成
-// =======================
+// =====================
 function createMap(){
   blocks = [];
 
@@ -96,9 +96,9 @@ function createBlock(x,y,color,solid){
   });
 }
 
-// =======================
+// =====================
 // 描画
-// =======================
+// =====================
 function draw(){
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -117,9 +117,9 @@ function draw(){
   requestAnimationFrame(draw);
 }
 
-// =======================
+// =====================
 // 移動判定
-// =======================
+// =====================
 function canMove(newX,newY){
   for(let b of blocks){
     if(b.solid){
@@ -136,7 +136,7 @@ function canMove(newX,newY){
   return true;
 }
 
-// タイル位置取得
+// タイル座標取得
 function getTilePosition(x,y){
   return {
     col: x / TILE,
@@ -144,9 +144,9 @@ function getTilePosition(x,y){
   };
 }
 
-// =======================
+// =====================
 // 会話処理
-// =======================
+// =====================
 function startTalk(lines){
   isTalking = true;
   talkLines = lines;
@@ -164,9 +164,9 @@ function endTalk(){
   messageBox.style.display = "none";
 }
 
-// =======================
+// =====================
 // キー操作
-// =======================
+// =====================
 document.addEventListener("keydown", e=>{
 
   // 会話中
@@ -197,20 +197,21 @@ document.addEventListener("keydown", e=>{
   else{
     const pos = getTilePosition(newX,newY);
 
-    // ⭐ デバッグ表示（F12 → Consoleで確認）
+    // ⭐ デバッグ表示
     console.log("row:", pos.row, "col:", pos.col);
 
     const tile = mapData[pos.row]?.[pos.col];
 
     if(tile === "机"){
 
-      // ⭐ 特別机判定
+      // ⭐ 先に特別机を判定（上書き防止）
       if(pos.row === specialDesk.row && pos.col === specialDesk.col){
         startTalk(specialDeskConversation);
-      }else{
-        startTalk(deskConversation);
+        return; // ← ここ重要（通常会話を止める）
       }
 
+      // 通常机
+      startTalk(deskConversation);
     }
   }
 

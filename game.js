@@ -81,7 +81,10 @@ const kyoutaku = [
   "…………………………………………",
   "普段宿題を出さない先生に言われてもなぁ"
 ];
-
+const nakashin = [
+  "黒板にしみがある",
+  "きっと多汗症の英語教師が触ったのだろう"
+]
 // =====================
 // マップ読み込み
 // =====================
@@ -122,6 +125,7 @@ function createMap(){
       if(tile === "黒板") createBlock(x,y,"green",true);
       if(tile === "教卓") createBlock(x,y,"darkred",true);
       if(tile === "扉") createBlock(x,y,"orange",true);
+      if(tile === "中") createBlock(x,y,"green",true);
     }
   }
 }
@@ -289,5 +293,6 @@ document.addEventListener("keydown", e=>{
     if(tile === "A") startTalk(ryouA);
     if(tile === "よ") startTalk(yoshiodesk);
     if(tile === "教卓") startTalk(kyoutaku);
+    if(tile === "中") startTalk(nakashin);
   }
 });

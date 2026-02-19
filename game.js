@@ -256,8 +256,3 @@ document.addEventListener("keydown", e=>{
     if(tile === "教卓") startTalk(kyoutaku);
   }
 });
-document.addEventListener("keydown", e=>{
-  if(e.key === "f"){
-    canvas.requestFullscreen();
-  }
-});

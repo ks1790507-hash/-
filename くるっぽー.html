@@ -252,9 +252,9 @@ function nextDialogue(){
   }
 
   if(index >= dialogue.length){
-    window.location.href = "探検.html";
-    return;
-  }
+  return;
+}
+
 
   let d = dialogue[index];
   nameBox.textContent = d.name;
@@ -262,11 +262,20 @@ function nextDialogue(){
   typeText(d.text);
   index++;
 }
+document.addEventListener("keydown", e => {
 
-document.addEventListener("keydown",e=>{
-  if(e.code==="Space"){
+  // スペース → 会話送り
+  if(e.code === "Space"){
     nextDialogue();
   }
+
+  // Tキー → 探検画面へ移動
+  if(e.code === "KeyT"){
+    window.location.href = "探検.html";
+  }
+
+});
+
 });
 </script>
 

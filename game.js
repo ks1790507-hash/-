@@ -36,7 +36,7 @@ const specialDeskConversation = [
 // ⭐ 特別机の座標（ここを後でConsoleで合わせる）
 let specialDesk = {
   row: 4,
-  col: 8
+  col: 2
 };
 
 // =====================

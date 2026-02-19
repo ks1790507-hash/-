@@ -32,6 +32,12 @@ const specialDeskConversation = [
   "”制作者メッセージ”",
   "字が汚くて読めない…"
 ];
+const yoshiodesk = [
+  "机の中に手紙がある…"
+  "放課後生徒玄関前に来てください",
+  "男の文字だ"
+  "きっとゲイからのメッセージだ…"
+  ];
 
 // =====================
 // MAP読み込み
@@ -205,7 +211,7 @@ document.addEventListener("keydown", e=>{
       startTalk(deskConversation);
     }
     if(tile ==="よ"){
-    startTalk(deskConversation);
+    startTalk(yoshiodesk);
     }
   }
 

@@ -13,7 +13,7 @@ const player = {
   color: "blue"
 };
 
-// 会話管理
+// 会話
 let isTalking = false;
 let talkLines = [];
 let talkIndex = 0;
@@ -32,12 +32,6 @@ const specialDeskConversation = [
   "引き出しの奥に鍵がある！",
   "『理科準備室』と書いてある。"
 ];
-
-// ⭐ 特別机の座標（ここを後でConsoleで合わせる）
-let specialDesk = {
-  row: 4,
-  col: 2
-};
 
 // =====================
 // MAP読み込み
@@ -69,6 +63,11 @@ function createMap(){
 
       if(tile === "机"){
         createBlock(x,y,"brown",true);
+      }
+
+      // ⭐ 特別机は色を変える
+      if(tile === "特別机"){
+        createBlock(x,y,"red",true);
       }
 
       if(tile === "黒板"){
@@ -136,16 +135,14 @@ function canMove(newX,newY){
   return true;
 }
 
-// タイル座標取得
-function getTilePosition(x,y){
-  return {
-    col: x / TILE,
-    row: y / TILE
-  };
+function getTileAt(x,y){
+  const col = x / TILE;
+  const row = y / TILE;
+  return mapData[row]?.[col];
 }
 
 // =====================
-// 会話処理
+// 会話
 // =====================
 function startTalk(lines){
   isTalking = true;
@@ -169,7 +166,6 @@ function endTalk(){
 // =====================
 document.addEventListener("keydown", e=>{
 
-  // 会話中
   if(isTalking){
     if(e.code === "Space"){
       talkIndex++;
@@ -195,22 +191,14 @@ document.addEventListener("keydown", e=>{
     player.y = newY;
   }
   else{
-    const pos = getTilePosition(newX,newY);
+    const tile = getTileAt(newX,newY);
 
-    // ⭐ デバッグ表示
-    console.log("row:", pos.row, "col:", pos.col);
-
-    const tile = mapData[pos.row]?.[pos.col];
+    if(tile === "特別机"){
+      startTalk(specialDeskConversation);
+      return;
+    }
 
     if(tile === "机"){
-
-      // ⭐ 先に特別机を判定（上書き防止）
-      if(pos.row === specialDesk.row && pos.col === specialDesk.col){
-        startTalk(specialDeskConversation);
-        return; // ← ここ重要（通常会話を止める）
-      }
-
-      // 通常机
       startTalk(deskConversation);
     }
   }

@@ -1,3 +1,11 @@
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -246,5 +254,10 @@ document.addEventListener("keydown", e=>{
     if(tile === "A") startTalk(ryouA);
     if(tile === "よ") startTalk(yoshiodesk);
     if(tile === "教卓") startTalk(kyoutaku);
+  }
+});
+document.addEventListener("keydown", e=>{
+  if(e.key === "f"){
+    canvas.requestFullscreen();
   }
 });

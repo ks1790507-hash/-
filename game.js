@@ -277,8 +277,8 @@ document.addEventListener("keydown", e=>{
       }else{
         loadMap("map");
       }
-      player.x = 64;
-      player.y = 64;
+      player.x = 2048;
+      player.y = 192;
       targetX = player.x;
       targetY = player.y;
       return;

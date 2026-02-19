@@ -31,7 +31,7 @@ let mapHeight = 0;
 // プレイヤー
 // =====================
 const player = {
-  x: 64,
+  x: 448,
   y: 64,
   size: TILE,
   color: "blue"

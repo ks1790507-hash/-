@@ -67,7 +67,7 @@ function createMap(){
 
       // ⭐ 特別机は色を変える
       if(tile === "特別机"){
-        createBlock(x,y,"red",true);
+        createBlock(x,y,"brown",true);
       }
 
       if(tile === "黒板"){

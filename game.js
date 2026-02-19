@@ -4,6 +4,7 @@ const ctx = canvas.getContext("2d");
 const TILE = 32;
 let mapData = [];
 let blocks = [];
+let currentMap = "map";
 
 // プレイヤー
 const player = {
@@ -19,45 +20,48 @@ let talkLines = [];
 let talkIndex = 0;
 const messageBox = document.getElementById("messageBox");
 
-// 通常机
+// 会話データ
 const deskConversation = [
   "机の中を調べた。",
   "特に変わったものはない。"
 ];
 
-// ⭐ 特別机
 const specialDeskConversation = [
   "机の中に手紙があった。",
   "”制作者メッセージ”",
   "が、字が汚くて読めない…"
 ];
+
 const yoshiodesk = [
   "机の中に手紙がある…",
   "放課後生徒玄関前に来てください",
-  "男の文字だ",
-  "きっとゲイからのメッセージだ…"
-  ];
+  "男の文字だ"
+];
+
 const ryouA = [
   "机の中に手紙がある…",
-  "放課後生徒玄関前に来てください",
   "なにかデジャブを感じる"
 ];
+
 const kyoutaku = [
   "先生からの最後の宿題",
-  "幸せになってください",
-  "…………………",
-  "先生から宿題が出たことがほとんどないからなぁ…"
-  ]
+  "幸せになってください"
+];
+
 // =====================
-// MAP読み込み
+// マップ読み込み
 // =====================
-fetch("map.json")
-  .then(res => res.json())
-  .then(data => {
-    mapData = data;
-    createMap();
-    draw();
-  });
+function loadMap(name){
+  fetch(name + ".json")
+    .then(res => res.json())
+    .then(data => {
+      mapData = data;
+      currentMap = name;
+      createMap();
+    });
+}
+
+loadMap("map");
 
 // =====================
 // マップ生成
@@ -75,32 +79,26 @@ function createMap(){
       if(tile === "壁"){
         createBlock(x,y,"gray",true);
       }
-
       if(tile === "机"){
         createBlock(x,y,"brown",true);
       }
-
-      
       if(tile === "特別机"){
         createBlock(x,y,"brown",true);
       }
-
-      if(tile ==="よ"){
-        createBlock(x,y,"brown",true)
+      if(tile === "よ"){
+        createBlock(x,y,"brown",true);
       }
-      if(tile ==="A"){
+      if(tile === "A"){
         createBlock(x,y,"brown",true);
       }
       if(tile === "黒板"){
         createBlock(x,y,"green",true);
       }
-
       if(tile === "教卓"){
         createBlock(x,y,"darkred",true);
       }
-
       if(tile === "扉"){
-        createBlock(x,y,"orange",false);
+        createBlock(x,y,"orange",true); // ← 当たり判定あり
       }
     }
   }
@@ -120,7 +118,6 @@ function createBlock(x,y,color,solid){
 // 描画
 // =====================
 function draw(){
-
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
   ctx.fillStyle = "#f5f5dc";
@@ -136,9 +133,10 @@ function draw(){
 
   requestAnimationFrame(draw);
 }
+draw();
 
 // =====================
-// 移動判定
+// 判定
 // =====================
 function canMove(newX,newY){
   for(let b of blocks){
@@ -157,8 +155,8 @@ function canMove(newX,newY){
 }
 
 function getTileAt(x,y){
-  const col = x / TILE;
-  const row = y / TILE;
+  const col = Math.floor(x / TILE);
+  const row = Math.floor(y / TILE);
   return mapData[row]?.[col];
 }
 
@@ -210,28 +208,25 @@ document.addEventListener("keydown", e=>{
   if(canMove(newX,newY)){
     player.x = newX;
     player.y = newY;
-  }
-  else{
+  }else{
     const tile = getTileAt(newX,newY);
 
-    if(tile === "特別机"){
-      startTalk(specialDeskConversation);
+    // 扉でマップ切替
+    if(tile === "扉"){
+      if(currentMap === "map"){
+        loadMap("hallway");
+      }else{
+        loadMap("map");
+      }
+      player.x = 32;
+      player.y = 32;
       return;
     }
 
-    if(tile === "机"){
-      startTalk(deskConversation);
-    }
-     if(tile === "A"){
-      startTalk(ryouA);
-     }
-    if(tile ==="よ"){
-    startTalk(yoshiodesk);
-    }
-     if(tile === "教卓"){
-      startTalk(kyoutaku);
-    }
-
+    if(tile === "特別机") startTalk(specialDeskConversation);
+    if(tile === "机") startTalk(deskConversation);
+    if(tile === "A") startTalk(ryouA);
+    if(tile === "よ") startTalk(yoshiodesk);
+    if(tile === "教卓") startTalk(kyoutaku);
   }
-
 });

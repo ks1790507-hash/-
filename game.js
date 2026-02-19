@@ -88,6 +88,8 @@ function createMap(){
       if(tile ==="よ"){
         createBlock(x,y,"brown",true)
       }
+      if(tile ==="A"){
+        creatBlock(x,y,"brown",true)
       if(tile === "黒板"){
         createBlock(x,y,"green",true);
       }

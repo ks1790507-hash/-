@@ -35,7 +35,7 @@ const specialDeskConversation = [
 const yoshiodesk = [
   "机の中に手紙がある…"
   "放課後生徒玄関前に来てください",
-  "男の文字だ"
+  "男の文字だ",
   "きっとゲイからのメッセージだ…"
   ];
 

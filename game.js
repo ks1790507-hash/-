@@ -1,10 +1,22 @@
-
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
+// =====================
+// canvas取得（最初に！）
+// =====================
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// =====================
+// 画面リサイズ
+// =====================
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+// =====================
+// 基本設定
+// =====================
 const TILE = 32;
 let mapData = [];
 let blocks = [];
@@ -12,7 +24,6 @@ let currentMap = "map";
 
 let cameraX = 0;
 let cameraY = 0;
-
 let mapWidth = 0;
 let mapHeight = 0;
 
@@ -25,6 +36,12 @@ const player = {
   size: TILE,
   color: "blue"
 };
+
+// ★ スムーズ移動用
+let targetX = player.x;
+let targetY = player.y;
+let isMoving = false;
+const moveSpeed = 8;
 
 // =====================
 // 会話
@@ -81,7 +98,6 @@ function loadMap(name){
       createMap();
     });
 }
-
 loadMap("map");
 
 // =====================
@@ -118,24 +134,40 @@ function createBlock(x,y,color,solid){
 // =====================
 function draw(){
 
+  // ★ 移動アニメ処理
+  if(isMoving){
+    if(player.x < targetX) player.x += moveSpeed;
+    if(player.x > targetX) player.x -= moveSpeed;
+    if(player.y < targetY) player.y += moveSpeed;
+    if(player.y > targetY) player.y -= moveSpeed;
+
+    if(
+      Math.abs(player.x - targetX) <= moveSpeed &&
+      Math.abs(player.y - targetY) <= moveSpeed
+    ){
+      player.x = targetX;
+      player.y = targetY;
+      isMoving = false;
+    }
+  }
+
   ctx.clearRect(0,0,canvas.width,canvas.height);
   ctx.fillStyle = "#f5f5dc";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // ===== カメラ処理 =====
+  // ===== カメラ =====
   if(currentMap === "map"){
     cameraX = 0;
     cameraY = 0;
   }else{
-
     cameraX = player.x - canvas.width/2 + player.size/2;
     cameraY = player.y - canvas.height/2 + player.size/2;
 
-    // ★ 端で止める処理
     cameraX = Math.max(0, Math.min(cameraX, mapWidth - canvas.width));
     cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
   }
 
+  // ブロック描画
   blocks.forEach(b=>{
     ctx.fillStyle = b.color;
     ctx.fillRect(
@@ -146,6 +178,7 @@ function draw(){
     );
   });
 
+  // プレイヤー描画
   ctx.fillStyle = player.color;
   ctx.fillRect(
     player.x - cameraX,
@@ -157,15 +190,6 @@ function draw(){
   requestAnimationFrame(draw);
 }
 draw();
-function resizeCanvas(){
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
-const canvas = document.getElementById("gameCanvas");
 
 // =====================
 // 判定
@@ -229,6 +253,8 @@ document.addEventListener("keydown", e=>{
     return;
   }
 
+  if(isMoving) return;
+
   let newX = player.x;
   let newY = player.y;
 
@@ -238,8 +264,9 @@ document.addEventListener("keydown", e=>{
   if(e.key === "ArrowRight") newX += TILE;
 
   if(canMove(newX,newY)){
-    player.x = newX;
-    player.y = newY;
+    targetX = newX;
+    targetY = newY;
+    isMoving = true;
   }else{
     const tile = getTileAt(newX,newY);
 
@@ -251,6 +278,8 @@ document.addEventListener("keydown", e=>{
       }
       player.x = 64;
       player.y = 64;
+      targetX = player.x;
+      targetY = player.y;
       return;
     }
 

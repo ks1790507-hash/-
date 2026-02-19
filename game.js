@@ -86,7 +86,8 @@ const kyoutaku = [
 // マップ読み込み
 // =====================
 function loadMap(name){
-  fetch(name + ".json")
+ fetch("./" + name + ".json")
+
     .then(res => res.json())
     .then(data => {
       mapData = data;

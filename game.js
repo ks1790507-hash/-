@@ -65,11 +65,14 @@ function createMap(){
         createBlock(x,y,"brown",true);
       }
 
-      // ⭐ 特別机は色を変える
+      
       if(tile === "特別机"){
         createBlock(x,y,"brown",true);
       }
 
+      if(tile ==="よ"){
+        createBlock(x,y,"brown",true)
+      }
       if(tile === "黒板"){
         createBlock(x,y,"green",true);
       }
@@ -200,6 +203,9 @@ document.addEventListener("keydown", e=>{
 
     if(tile === "机"){
       startTalk(deskConversation);
+    }
+    if(tile ==="よ"){
+    startTalk(deskConversation);
     }
   }
 

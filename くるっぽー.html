@@ -251,7 +251,7 @@ function nextDialogue(){
     return;
   }
 
-  if(index >= dialogue.length){
+if(index >= dialogue.length){
   return;
 }
 
@@ -262,6 +262,7 @@ function nextDialogue(){
   typeText(d.text);
   index++;
 }
+
 document.addEventListener("keydown", e => {
 
   // スペース → 会話送り
@@ -276,7 +277,6 @@ document.addEventListener("keydown", e => {
 
 });
 
-});
 </script>
 
 </body>

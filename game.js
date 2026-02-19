@@ -22,7 +22,6 @@ const messageBox = document.getElementById("messageBox");
 // 通常机
 const deskConversation = [
   "机の中を調べた。",
-  "プリントが入っている。",
   "特に変わったものはない。"
 ];
 
@@ -30,7 +29,7 @@ const deskConversation = [
 const specialDeskConversation = [
   "机の中に手紙があった。",
   "”制作者メッセージ”",
-  "字が汚くて読めない…"
+  "が、字が汚くて読めない…"
 ];
 const yoshiodesk = [
   "机の中に手紙がある…",
@@ -38,7 +37,17 @@ const yoshiodesk = [
   "男の文字だ",
   "きっとゲイからのメッセージだ…"
   ];
-
+const ryouA = [
+  "机の中に手紙がある…",
+  "放課後生徒玄関前に来てください",
+  "なにかデジャブを感じる"
+];
+const kyoutaku = [
+  "先生からの最後の宿題",
+  "幸せになってください",
+  "…………………",
+  "先生から宿題が出たことがほとんどないからなぁ…"
+  ]
 // =====================
 // MAP読み込み
 // =====================
@@ -210,9 +219,16 @@ document.addEventListener("keydown", e=>{
     if(tile === "机"){
       startTalk(deskConversation);
     }
+     if(tile === "A"){
+      startTalk(ryouA);
+     }
     if(tile ==="よ"){
     startTalk(yoshiodesk);
     }
+     if(tile === "教卓"){
+      startTalk(kyoutaku);
+    }
+
   }
 
 });

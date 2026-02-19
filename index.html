@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>パスワードページ</title>
+<style>
+  body{
+    font-family: Arial;
+    text-align:center;
+    margin-top:100px;
+  }
+  #goBtn{
+    display:none;
+    margin-top:1px;
+    padding:1px 1px;
+    font-size:1px;
+  }
+  input{
+  background-color: white;
+  border: 2px solid rgb(255, 255, 255);
+  padding: 8px;
+}
+
+</style>
+</head>
+<body>
+<p>私りょうAは今まで隠していたことがあります<br>
+ブロック解除をしたのは私です<br>
+タブ整理を怠ったばかりに起こしてしまった結果です<br>
+拡張機能のところが開けなくなったのは私達がブロック解除しすぎた結果です。<br>
+どうか許してください神様久保田様３の２の仏様(笑)<br>
+昔久保田先生に尋ねてみました。<br>
+久保田先生は巨乳派か貧乳派か<br>
+そしたら久保田先生は答えました。<br>
+"大は小を兼ねる"と<br>
+私はその言葉に深く感心したことを今でも覚えています。<br>
+→|
+</p>
+<br>
+<input type="password" id="pass" placeholder="">
+<br>
+<button onclick="check()"></button>
+
+<br>
+<a href="https://example.com" id="goBtn">
+  <button>サイトへ進む</button>
+</a>
+
+<script>
+function check(){
+  const password = "ks@kushiro.ed.jp";
+  const input = document.getElementById("pass").value;
+  
+  if(input === password){
+    document.getElementById("goBtn").style.display = "inline";
+  }else{
+    alert("QRなくしてなかったらわかるよね");
+  }
+}
+</script>
+
+</body>
+</html>

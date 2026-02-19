@@ -1,7 +1,3 @@
-function resizeCanvas(){
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
 
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
@@ -161,6 +157,15 @@ function draw(){
   requestAnimationFrame(draw);
 }
 draw();
+function resizeCanvas(){
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+const canvas = document.getElementById("gameCanvas");
 
 // =====================
 // 判定

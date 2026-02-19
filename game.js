@@ -162,6 +162,7 @@ function endTalk(){
   isTalking = false;
   messageBox.style.display = "none";
 }
+console.log("row:", pos.row, "col:", pos.col);
 
 // =================
 // キー操作

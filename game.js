@@ -31,7 +31,7 @@ let mapHeight = 0;
 // プレイヤー
 // =====================
 const player = {
-  x: 448,
+  x: 64,
   y: 64,
   size: TILE,
   color: "blue"
@@ -277,7 +277,7 @@ document.addEventListener("keydown", e=>{
       }else{
         loadMap("map");
       }
-      player.x = 64;
+      player.x = 640;
       player.y = 64;
       targetX = player.x;
       targetY = player.y;

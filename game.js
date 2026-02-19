@@ -22,15 +22,14 @@ const messageBox = document.getElementById("messageBox");
 // 通常机
 const deskConversation = [
   "机の中を調べた。",
-  "プリントが入っている。",
   "特に変わったものはない。"
 ];
 
 // ⭐ 特別机
 const specialDeskConversation = [
-  "この机は少し違う…",
-  "引き出しの奥に鍵がある！",
-  "『理科準備室』と書いてある。"
+  "机の中になにか入ってる",
+  "佐藤という人の手紙だ",
+  "字が汚くて読めない…"
 ];
 
 // ⭐ 特別机の座標（row, col）

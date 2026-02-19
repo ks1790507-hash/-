@@ -9,7 +9,12 @@ let currentMap = "map";
 let cameraX = 0;
 let cameraY = 0;
 
+let mapWidth = 0;
+let mapHeight = 0;
+
+// =====================
 // プレイヤー
+// =====================
 const player = {
   x: 64,
   y: 64,
@@ -17,15 +22,19 @@ const player = {
   color: "blue"
 };
 
+// =====================
 // 会話
+// =====================
 let isTalking = false;
 let talkLines = [];
 let talkIndex = 0;
 const messageBox = document.getElementById("messageBox");
+
 const deskConversation = [
   "机の中を調べた。",
   "特に変わったものはない。"
 ];
+
 const specialDeskConversation = [
   "机の中に手紙があった。",
   "”制作者メッセージ”",
@@ -61,6 +70,10 @@ function loadMap(name){
     .then(data => {
       mapData = data;
       currentMap = name;
+
+      mapWidth = mapData[0].length * TILE;
+      mapHeight = mapData.length * TILE;
+
       createMap();
     });
 }
@@ -97,24 +110,26 @@ function createBlock(x,y,color,solid){
 }
 
 // =====================
-// 描画（カメラ対応）
+// 描画
 // =====================
 function draw(){
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
-
   ctx.fillStyle = "#f5f5dc";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // ===== マップごとにカメラ切替 =====
-  if(currentMap === "map"){ 
-    // 教室 → 固定カメラ
+  // ===== カメラ処理 =====
+  if(currentMap === "map"){
     cameraX = 0;
     cameraY = 0;
   }else{
-    // 廊下 → 追従カメラ
+
     cameraX = player.x - canvas.width/2 + player.size/2;
     cameraY = player.y - canvas.height/2 + player.size/2;
+
+    // ★ 端で止める処理
+    cameraX = Math.max(0, Math.min(cameraX, mapWidth - canvas.width));
+    cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
   }
 
   blocks.forEach(b=>{
@@ -137,6 +152,7 @@ function draw(){
 
   requestAnimationFrame(draw);
 }
+draw();
 
 // =====================
 // 判定
@@ -162,13 +178,43 @@ function getTileAt(x,y){
   const row = Math.floor(y / TILE);
   return mapData[row]?.[col];
 }
-draw();
+
+// =====================
+// 会話
+// =====================
+function startTalk(lines){
+  isTalking = true;
+  talkLines = lines;
+  talkIndex = 0;
+  showMessage(talkLines[0]);
+}
+
+function showMessage(text){
+  messageBox.style.display = "flex";
+  messageBox.innerText = text;
+}
+
+function endTalk(){
+  isTalking = false;
+  messageBox.style.display = "none";
+}
+
 // =====================
 // キー操作
 // =====================
 document.addEventListener("keydown", e=>{
 
-  if(isTalking) return;
+  if(isTalking){
+    if(e.code === "Space"){
+      talkIndex++;
+      if(talkIndex < talkLines.length){
+        showMessage(talkLines[talkIndex]);
+      }else{
+        endTalk();
+      }
+    }
+    return;
+  }
 
   let newX = player.x;
   let newY = player.y;
@@ -192,12 +238,13 @@ document.addEventListener("keydown", e=>{
       }
       player.x = 64;
       player.y = 64;
+      return;
     }
+
     if(tile === "特別机") startTalk(specialDeskConversation);
     if(tile === "机") startTalk(deskConversation);
     if(tile === "A") startTalk(ryouA);
     if(tile === "よ") startTalk(yoshiodesk);
     if(tile === "教卓") startTalk(kyoutaku);
   }
-
 });

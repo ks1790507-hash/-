@@ -199,3 +199,77 @@ function draw(){
   requestAnimationFrame(draw);
 }
 draw();
+// =====================
+// 当たり判定
+// =====================
+function canMove(newX,newY){
+  for(let b of blocks){
+    if(b.solid){
+      if(
+        newX < b.x + b.size &&
+        newX + player.size > b.x &&
+        newY < b.y + b.size &&
+        newY + player.size > b.y
+      ){
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+function getTileAt(x,y){
+  const col = Math.floor(x / TILE);
+  const row = Math.floor(y / TILE);
+  return mapData[row]?.[col];
+}
+
+// =====================
+// キー操作
+// =====================
+document.addEventListener("keydown", e=>{
+
+  if(isTalking){
+    if(e.code === "Space"){
+      talkIndex++;
+      if(talkIndex < talkLines.length){
+        showMessage(talkLines[talkIndex]);
+      }else{
+        endTalk();
+      }
+    }
+    return;
+  }
+
+  if(isMoving) return;
+
+  let newX = player.x;
+  let newY = player.y;
+
+  if(e.key === "ArrowUp") newY -= TILE;
+  if(e.key === "ArrowDown") newY += TILE;
+  if(e.key === "ArrowLeft") newX -= TILE;
+  if(e.key === "ArrowRight") newX += TILE;
+
+  if(canMove(newX,newY)){
+    targetX = newX;
+    targetY = newY;
+    isMoving = true;
+  }else{
+
+    const tile = getTileAt(newX,newY);
+
+    if(tile === "扉"){
+      if(currentMap === "map"){
+        loadMap("hallway");
+      }else{
+        loadMap("map");
+      }
+      return;
+    }
+
+    if(currentEvents[tile]){
+      startTalk(currentEvents[tile]);
+    }
+  }
+});

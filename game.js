@@ -97,7 +97,7 @@ function createMap(){
 
       if(tile === "壁") createBlock(x,y,"gray",true);
       if(tile === "机") createBlock(x,y,"brown",true);
-      if(tile === "特別机") createBlock(x,y,"brown",true);
+      if(tile === "藤") createBlock(x,y,"brown",true);
       if(tile === "よ") createBlock(x,y,"brown",true);
       if(tile === "A") createBlock(x,y,"brown",true);
       if(tile === "黒板") createBlock(x,y,"green",true);

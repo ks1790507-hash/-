@@ -103,6 +103,7 @@ function createMap(){
       if(tile === "教卓") createBlock(x,y,"darkred",true);
       if(tile === "扉") createBlock(x,y,"orange",true);
       if(tile === "中") createBlock(x,y,"green",true);
+      
     }
   }
 }
@@ -251,7 +252,7 @@ document.addEventListener("keydown", e=>{
     // ★ 扉
     if(tile === "扉"){
       const nextMap = currentMap === "map" ? "hallway" : "map";
-      loadMap(nextMap);
+      loadMap(nextmap);
       return;
     }
 

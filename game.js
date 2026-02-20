@@ -14,9 +14,6 @@ function resizeCanvas(){
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-// =====================
-// 基本設定
-// =====================
 const TILE = 32;
 
 let mapData = [];
@@ -30,6 +27,20 @@ let mapHeight = 0;
 
 let cameraX = 0;
 let cameraY = 0;
+
+// =====================
+// 画像読み込み（PNG対応）
+// =====================
+const images = {};
+
+function loadImage(name, src){
+  const img = new Image();
+  img.src = src;
+  images[name] = img;
+}
+
+// 必要な画像をここで読み込む
+loadImage("desk", "desk.png");
 
 // =====================
 // プレイヤー
@@ -138,40 +149,37 @@ function draw(){
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // ===== カメラ =====
-  if(currentMap === "map"){
-    cameraX = 0;
-    cameraY = 0;
-  }else{
-    cameraX = player.x - canvas.width/2 + player.size/2;
-    cameraY = player.y - canvas.height/2 + player.size/2;
+  // カメラ
+  cameraX = player.x - canvas.width/2 + player.size/2;
+  cameraY = player.y - canvas.height/2 + player.size/2;
 
-    cameraX = Math.max(0, Math.min(cameraX, mapWidth - canvas.width));
-    cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
-  }
+  cameraX = Math.max(0, Math.min(cameraX, mapWidth - canvas.width));
+  cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
 
-  // ===== タイル描画 =====
+  // タイル描画
   blocks.forEach(b => {
 
     const x = b.x - cameraX;
     const y = b.y - cameraY;
 
-    // ① 床デザイン（小豆色＋横ライン）
-    if(b.drawType === "floor"){
-      // ベース
+    // ① PNGタイル
+    if(b.image && images[b.image]){
+      ctx.drawImage(images[b.image], x, y, b.size, b.size);
+    }
+
+    // ② 床デザイン描画
+    else if(b.drawType === "floor"){
       ctx.fillStyle = "#7b3f61";
       ctx.fillRect(x, y, b.size, b.size);
 
-      // 上の横ライン
       ctx.fillStyle = "#a85c7d";
       ctx.fillRect(x, y, b.size, 4);
 
-      // タイル枠
       ctx.strokeStyle = "#5e2e47";
       ctx.strokeRect(x, y, b.size, b.size);
     }
 
-    // ② 通常色タイル
+    // ③ 通常色タイル
     else if(b.color){
       ctx.fillStyle = b.color;
       ctx.fillRect(x, y, b.size, b.size);
@@ -179,7 +187,7 @@ function draw(){
 
   });
 
-  // ===== プレイヤー描画 =====
+  // プレイヤー
   ctx.fillStyle = player.color;
   ctx.fillRect(
     player.x - cameraX,
@@ -191,98 +199,3 @@ function draw(){
   requestAnimationFrame(draw);
 }
 draw();
-
-// =====================
-// 当たり判定
-// =====================
-function canMove(newX,newY){
-  for(let b of blocks){
-    if(b.solid){
-      if(
-        newX < b.x + b.size &&
-        newX + player.size > b.x &&
-        newY < b.y + b.size &&
-        newY + player.size > b.y
-      ){
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-function getTileAt(x,y){
-  const col = Math.floor(x / TILE);
-  const row = Math.floor(y / TILE);
-  return mapData[row]?.[col];
-}
-
-// =====================
-// 会話
-// =====================
-function startTalk(lines){
-  isTalking = true;
-  talkLines = lines;
-  talkIndex = 0;
-  showMessage(talkLines[0]);
-}
-
-function showMessage(text){
-  messageBox.style.display = "flex";
-  messageBox.innerText = text;
-}
-
-function endTalk(){
-  isTalking = false;
-  messageBox.style.display = "none";
-}
-
-// =====================
-// キー操作
-// =====================
-document.addEventListener("keydown", e=>{
-
-  if(isTalking){
-    if(e.code === "Space"){
-      talkIndex++;
-      if(talkIndex < talkLines.length){
-        showMessage(talkLines[talkIndex]);
-      }else{
-        endTalk();
-      }
-    }
-    return;
-  }
-
-  if(isMoving) return;
-
-  let newX = player.x;
-  let newY = player.y;
-
-  if(e.key === "ArrowUp") newY -= TILE;
-  if(e.key === "ArrowDown") newY += TILE;
-  if(e.key === "ArrowLeft") newX -= TILE;
-  if(e.key === "ArrowRight") newX += TILE;
-
-  if(canMove(newX,newY)){
-    targetX = newX;
-    targetY = newY;
-    isMoving = true;
-  }else{
-
-    const tile = getTileAt(newX,newY);
-
-    if(tile === "扉"){
-      if(currentMap === "map"){
-        loadMap("hallway");
-      }else{
-        loadMap("map");
-      }
-      return;
-    }
-
-    if(currentEvents[tile]){
-      startTalk(currentEvents[tile]);
-    }
-  }
-});

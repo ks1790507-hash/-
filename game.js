@@ -18,29 +18,30 @@ resizeCanvas();
 // 基本設定
 // =====================
 const TILE = 32;
+
 let mapData = [];
 let blocks = [];
-let currentMap = "map";
+let currentMap = "";
+let currentEvents = {};
 
-let cameraX = 0;
-let cameraY = 0;
 let mapWidth = 0;
 let mapHeight = 0;
 
-let currentEvents = {}; // ★ JSONから読み込む
+let cameraX = 0;
+let cameraY = 0;
 
 // =====================
 // プレイヤー
 // =====================
 const player = {
-  x: 64,
-  y: 64,
+  x: 0,
+  y: 0,
   size: TILE,
   color: "blue"
 };
 
-let targetX = player.x;
-let targetY = player.y;
+let targetX = 0;
+let targetY = 0;
 let isMoving = false;
 const moveSpeed = 8;
 
@@ -60,14 +61,14 @@ function loadMap(name){
     .then(res => res.json())
     .then(data => {
 
-      mapData = data.tiles;        // ★ tiles取得
-      currentEvents = data.events || {}; // ★ events取得
       currentMap = name;
+      mapData = data.tiles;
+      currentEvents = data.events || {};
 
       mapWidth = mapData[0].length * TILE;
       mapHeight = mapData.length * TILE;
 
-      // ★ スポーン位置もJSONから
+      // スポーン位置
       if(data.spawn){
         player.x = data.spawn.x;
         player.y = data.spawn.y;
@@ -97,8 +98,8 @@ function createMap(){
       if(tile === "壁") createBlock(x,y,"gray",true);
       if(tile === "机") createBlock(x,y,"brown",true);
       if(tile === "特別机") createBlock(x,y,"brown",true);
-      if(tile === "A") createBlock(x,y,"brown",true);
       if(tile === "よ") createBlock(x,y,"brown",true);
+      if(tile === "A") createBlock(x,y,"brown",true);
       if(tile === "黒板") createBlock(x,y,"green",true);
       if(tile === "教卓") createBlock(x,y,"darkred",true);
       if(tile === "扉") createBlock(x,y,"orange",true);
@@ -116,6 +117,7 @@ function createBlock(x,y,color,solid){
 // =====================
 function draw(){
 
+  // スムーズ移動
   if(isMoving){
     if(player.x < targetX) player.x += moveSpeed;
     if(player.x > targetX) player.x -= moveSpeed;
@@ -136,7 +138,8 @@ function draw(){
   ctx.fillStyle = "#f5f5dc";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  if(currentMap === "map"){
+  // ===== カメラ =====
+  if(currentMap === "map"){ // 教室は固定
     cameraX = 0;
     cameraY = 0;
   }else{
@@ -147,6 +150,7 @@ function draw(){
     cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
   }
 
+  // ブロック描画
   blocks.forEach(b=>{
     ctx.fillStyle = b.color;
     ctx.fillRect(
@@ -157,6 +161,7 @@ function draw(){
     );
   });
 
+  // プレイヤー描画
   ctx.fillStyle = player.color;
   ctx.fillRect(
     player.x - cameraX,
@@ -170,7 +175,7 @@ function draw(){
 draw();
 
 // =====================
-// 判定
+// 当たり判定
 // =====================
 function canMove(newX,newY){
   for(let b of blocks){
@@ -195,7 +200,7 @@ function getTileAt(x,y){
 }
 
 // =====================
-// 会話
+// 会話処理
 // =====================
 function startTalk(lines){
   isTalking = true;
@@ -246,16 +251,20 @@ document.addEventListener("keydown", e=>{
     targetY = newY;
     isMoving = true;
   }else{
+
     const tile = getTileAt(newX,newY);
 
-    // ★ 扉
+    // 扉
     if(tile === "扉"){
-      const nextMap = currentMap === "map" ? "hallway" : "map";
-      loadMap(nextMap);
+      if(currentMap === "map"){
+        loadMap("hallway");
+      }else{
+        loadMap("map");
+      }
       return;
     }
 
-    // ★ JSONイベント
+    // JSONイベント自動処理
     if(currentEvents[tile]){
       startTalk(currentEvents[tile]);
     }

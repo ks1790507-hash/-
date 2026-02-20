@@ -23,6 +23,7 @@ let mapData = [];
 let blocks = [];
 let currentMap = "";
 let currentEvents = {};
+let currentTileTypes = {};
 
 let mapWidth = 0;
 let mapHeight = 0;
@@ -62,13 +63,14 @@ function loadMap(name){
     .then(data => {
 
       currentMap = name;
+
       mapData = data.tiles;
       currentEvents = data.events || {};
+      currentTileTypes = data.tileTypes || {};
 
       mapWidth = mapData[0].length * TILE;
       mapHeight = mapData.length * TILE;
 
-      // スポーン位置
       if(data.spawn){
         player.x = data.spawn.x;
         player.y = data.spawn.y;
@@ -83,7 +85,7 @@ function loadMap(name){
 loadMap("map");
 
 // =====================
-// マップ生成
+// マップ生成（JSON管理版）
 // =====================
 function createMap(){
   blocks = [];
@@ -95,15 +97,11 @@ function createMap(){
       const x = col * TILE;
       const y = row * TILE;
 
-      if(tile === "壁") createBlock(x,y,"gray",true);
-      if(tile === "机") createBlock(x,y,"brown",true);
-      if(tile === "藤") createBlock(x,y,"brown",true);
-      if(tile === "よ") createBlock(x,y,"brown",true);
-      if(tile === "A") createBlock(x,y,"brown",true);
-      if(tile === "黒板") createBlock(x,y,"green",true);
-      if(tile === "教卓") createBlock(x,y,"darkred",true);
-      if(tile === "扉") createBlock(x,y,"orange",true);
-      if(tile === "中") createBlock(x,y,"green",true);
+      const type = currentTileTypes[tile];
+
+      if(type){
+        createBlock(x, y, type.color, type.solid);
+      }
     }
   }
 }
@@ -175,7 +173,7 @@ function draw(){
 draw();
 
 // =====================
-// 当たり判定
+// 判定
 // =====================
 function canMove(newX,newY){
   for(let b of blocks){
@@ -254,7 +252,7 @@ document.addEventListener("keydown", e=>{
 
     const tile = getTileAt(newX,newY);
 
-    // 扉
+    // 扉切り替え
     if(tile === "扉"){
       if(currentMap === "map"){
         loadMap("hallway");
@@ -264,7 +262,7 @@ document.addEventListener("keydown", e=>{
       return;
     }
 
-    // JSONイベント自動処理
+    // JSONイベント処理
     if(currentEvents[tile]){
       startTalk(currentEvents[tile]);
     }

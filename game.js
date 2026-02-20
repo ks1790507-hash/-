@@ -32,6 +32,20 @@ let cameraX = 0;
 let cameraY = 0;
 
 // =====================
+// 画像読み込み
+// =====================
+const images = {};
+
+function loadImage(name, src){
+  const img = new Image();
+  img.src = src;
+  images[name] = img;
+}
+
+// 机画像
+loadImage("desk", "desk.png");
+
+// =====================
 // プレイヤー
 // =====================
 const player = {
@@ -85,7 +99,7 @@ function loadMap(name){
 loadMap("map");
 
 // =====================
-// マップ生成（JSON管理版）
+// マップ生成
 // =====================
 function createMap(){
   blocks = [];
@@ -100,14 +114,17 @@ function createMap(){
       const type = currentTileTypes[tile];
 
       if(type){
-        createBlock(x, y, type.color, type.solid);
+        blocks.push({
+          x: x,
+          y: y,
+          size: TILE,
+          color: type.color,
+          solid: type.solid,
+          image: type.image || null
+        });
       }
     }
   }
-}
-
-function createBlock(x,y,color,solid){
-  blocks.push({ x,y,size:TILE,color,solid });
 }
 
 // =====================
@@ -136,8 +153,8 @@ function draw(){
   ctx.fillStyle = "#f5f5dc";
   ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // ===== カメラ =====
-  if(currentMap === "map"){ // 教室は固定
+  // カメラ
+  if(currentMap === "map"){
     cameraX = 0;
     cameraY = 0;
   }else{
@@ -148,15 +165,27 @@ function draw(){
     cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
   }
 
-  // ブロック描画
-  blocks.forEach(b=>{
-    ctx.fillStyle = b.color;
-    ctx.fillRect(
-      b.x - cameraX,
-      b.y - cameraY,
-      b.size,
-      b.size
-    );
+  // タイル描画
+  blocks.forEach(b => {
+
+    if(b.image && images[b.image]){
+      ctx.drawImage(
+        images[b.image],
+        b.x - cameraX,
+        b.y - cameraY,
+        b.size,
+        b.size
+      );
+    } else {
+      ctx.fillStyle = b.color;
+      ctx.fillRect(
+        b.x - cameraX,
+        b.y - cameraY,
+        b.size,
+        b.size
+      );
+    }
+
   });
 
   // プレイヤー描画
@@ -198,7 +227,7 @@ function getTileAt(x,y){
 }
 
 // =====================
-// 会話処理
+// 会話
 // =====================
 function startTalk(lines){
   isTalking = true;
@@ -252,7 +281,6 @@ document.addEventListener("keydown", e=>{
 
     const tile = getTileAt(newX,newY);
 
-    // 扉切り替え
     if(tile === "扉"){
       if(currentMap === "map"){
         loadMap("hallway");
@@ -262,7 +290,6 @@ document.addEventListener("keydown", e=>{
       return;
     }
 
-    // JSONイベント処理
     if(currentEvents[tile]){
       startTalk(currentEvents[tile]);
     }

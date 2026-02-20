@@ -14,3 +14,7 @@
 
   "events": {}
 }
+  "tileTypes": {
+    "壁":      { "color": "gray",     "solid": true  },
+    "扉":      { "color": "orange",   "solid": true  },
+     },

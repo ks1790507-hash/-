@@ -25,7 +25,7 @@
 
   "tileTypes": {
     "壁":      { "color": "gray",     "solid": true  },
-    "机":      { "color": "brown",    "solid": false,"image": "desk"},
+    "机":      { "color": "brown",    "solid": true,"image": "desk"},
     "特別机":  { "color": "brown",    "solid": true  },
     "よ":      { "color": "brown",    "solid": true  },
     "A":       { "color": "brown",    "solid": true  },
@@ -33,7 +33,8 @@
     "教卓":    { "color": "darkred",  "solid": true  },
     "扉":      { "color": "orange",   "solid": true  },
     "中":      { "color": "green",    "solid": true  },
-    "床":      {"solid": false,"drawType": "floor"}
+    "床":      {"solid": false,"drawType": "floor"},
+    "　": {"solid":false,}
   },
 
   "events": {

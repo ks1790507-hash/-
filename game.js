@@ -32,20 +32,6 @@ let cameraX = 0;
 let cameraY = 0;
 
 // =====================
-// 画像読み込み
-// =====================
-const images = {};
-
-function loadImage(name, src){
-  const img = new Image();
-  img.src = src;
-  images[name] = img;
-}
-
-// 机画像ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ
-loadImage("desk", "desk.png");
-
-// =====================
 // プレイヤー
 // =====================
 const player = {
@@ -118,9 +104,10 @@ function createMap(){
           x: x,
           y: y,
           size: TILE,
-          color: type.color,
-          solid: type.solid,
-          image: type.image || null
+          solid: type.solid || false,
+          image: type.image || null,
+          color: type.color || null,
+          drawType: type.drawType || null
         });
       }
     }
@@ -150,10 +137,8 @@ function draw(){
   }
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle = "#f5f5dc";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
 
-  // カメラ
+  // ===== カメラ =====
   if(currentMap === "map"){
     cameraX = 0;
     cameraY = 0;
@@ -165,30 +150,36 @@ function draw(){
     cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
   }
 
-  // タイル描画
+  // ===== タイル描画 =====
   blocks.forEach(b => {
 
-    if(b.image && images[b.image]){
-      ctx.drawImage(
-        images[b.image],
-        b.x - cameraX,
-        b.y - cameraY,
-        b.size,
-        b.size
-      );
-    } else {
+    const x = b.x - cameraX;
+    const y = b.y - cameraY;
+
+    // ① 床デザイン（小豆色＋横ライン）
+    if(b.drawType === "floor"){
+      // ベース
+      ctx.fillStyle = "#7b3f61";
+      ctx.fillRect(x, y, b.size, b.size);
+
+      // 上の横ライン
+      ctx.fillStyle = "#a85c7d";
+      ctx.fillRect(x, y, b.size, 4);
+
+      // タイル枠
+      ctx.strokeStyle = "#5e2e47";
+      ctx.strokeRect(x, y, b.size, b.size);
+    }
+
+    // ② 通常色タイル
+    else if(b.color){
       ctx.fillStyle = b.color;
-      ctx.fillRect(
-        b.x - cameraX,
-        b.y - cameraY,
-        b.size,
-        b.size
-      );
+      ctx.fillRect(x, y, b.size, b.size);
     }
 
   });
 
-  // プレイヤー描画
+  // ===== プレイヤー描画 =====
   ctx.fillStyle = player.color;
   ctx.fillRect(
     player.x - cameraX,
@@ -202,7 +193,7 @@ function draw(){
 draw();
 
 // =====================
-// 判定
+// 当たり判定
 // =====================
 function canMove(newX,newY){
   for(let b of blocks){

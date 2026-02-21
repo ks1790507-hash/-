@@ -22,7 +22,7 @@
 
   "tileTypes": {
     "壁":      { "color": "gray",     "solid": true  },
-    "机":      { "image": "desk", "color": "brown", "solid": true  },
+    "机":      { "image": "desk", "color": "brown","image":"desk" "solid": true  },
     "特別机":  { "color": "brown",    "solid": true  },
     "よ":      { "color": "brown",    "solid": true  },
     "A":       { "color": "brown",    "solid": true  },

@@ -37,9 +37,6 @@ function loadImage(name, src){
 }
 
 loadImage("desk", "desk.png");
-loadImage("juji","十字架.png");
-loadImage("eva","エヴァ.png");
-loadImage("player","シンジ君.png");
 
 // =====================
 // プレイヤー
@@ -47,7 +44,8 @@ loadImage("player","シンジ君.png");
 const player = {
   x: 0,
   y: 0,
-  size: TILE
+  size: TILE,
+  color: "blue"
 };
 
 let targetX = 0;
@@ -127,12 +125,11 @@ function createMap(){
         blocks.push({
           x: x,
           y: y,
-          baseSize: TILE,
+          size: TILE,
           solid: type.solid || false,
           image: type.image || null,
           color: type.color || null,
-          drawType: type.drawType || null,
-          scale: type.scale || 1
+          drawType: type.drawType || null
         });
       }
     }
@@ -176,46 +173,39 @@ function draw(){
     const x = b.x - cameraX;
     const y = b.y - cameraY;
 
-    // PNG描画（scale対応）
+    // PNG描画（読み込み完了時のみ）
     if(b.image && images[b.image] && images[b.image].complete){
-
-      const size = b.baseSize * b.scale;
-
-      ctx.drawImage(
-        images[b.image],
-        x,
-        y,
-        size,
-        size
-      );
+      ctx.drawImage(images[b.image], x, y, b.size, b.size);
     }
 
     // 床描画
     else if(b.drawType === "floor"){
-      ctx.fillStyle = "#cffffd";
-      ctx.fillRect(x, y, TILE, TILE);
+      ctx.fillStyle = "#7b3f61";
+      ctx.fillRect(x, y, b.size, b.size);
+
+      ctx.fillStyle = "#a85c7d";
+      ctx.fillRect(x, y, b.size, 4);
+
+      ctx.strokeStyle = "#5e2e47";
+      ctx.strokeRect(x, y, b.size, b.size);
     }
 
     // 通常色
     else if(b.color){
       ctx.fillStyle = b.color;
-      ctx.fillRect(x, y, TILE, TILE);
+      ctx.fillRect(x, y, b.size, b.size);
     }
 
   });
 
-  // =====================
-  // プレイヤー画像描画
-  // =====================
-  if(images["player"] && images["player"].complete){
-    ctx.drawImage(
-      images["player"],
-      player.x - cameraX,
-      player.y - cameraY,
-      player.size,
-      player.size
-    );
-  }
+  // プレイヤー
+  ctx.fillStyle = player.color;
+  ctx.fillRect(
+    player.x - cameraX,
+    player.y - cameraY,
+    player.size,
+    player.size
+  );
 
   requestAnimationFrame(draw);
 }
@@ -227,13 +217,10 @@ draw();
 function canMove(newX,newY){
   for(let b of blocks){
     if(b.solid){
-
-      const size = b.baseSize * b.scale;
-
       if(
-        newX < b.x + size &&
+        newX < b.x + b.size &&
         newX + player.size > b.x &&
-        newY < b.y + size &&
+        newY < b.y + b.size &&
         newY + player.size > b.y
       ){
         return false;

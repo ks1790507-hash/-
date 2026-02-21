@@ -4,9 +4,6 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// =====================
-// 画面リサイズ
-// =====================
 function resizeCanvas(){
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
@@ -29,7 +26,7 @@ let cameraX = 0;
 let cameraY = 0;
 
 // =====================
-// 画像読み込み（PNG対応）
+// 画像読み込み
 // =====================
 const images = {};
 
@@ -39,7 +36,6 @@ function loadImage(name, src){
   images[name] = img;
 }
 
-// 必要な画像をここで読み込む
 loadImage("desk", "desk.png");
 
 // =====================
@@ -65,6 +61,23 @@ let talkLines = [];
 let talkIndex = 0;
 const messageBox = document.getElementById("messageBox");
 
+function startTalk(lines){
+  isTalking = true;
+  talkLines = lines;
+  talkIndex = 0;
+  messageBox.style.display = "flex";
+  messageBox.textContent = talkLines[talkIndex];
+}
+
+function showMessage(text){
+  messageBox.textContent = text;
+}
+
+function endTalk(){
+  isTalking = false;
+  messageBox.style.display = "none";
+}
+
 // =====================
 // マップ読み込み
 // =====================
@@ -74,7 +87,6 @@ function loadMap(name){
     .then(data => {
 
       currentMap = name;
-
       mapData = data.tiles;
       currentEvents = data.events || {};
       currentTileTypes = data.tileTypes || {};
@@ -107,7 +119,6 @@ function createMap(){
       const tile = mapData[row][col];
       const x = col * TILE;
       const y = row * TILE;
-
       const type = currentTileTypes[tile];
 
       if(type){
@@ -162,12 +173,12 @@ function draw(){
     const x = b.x - cameraX;
     const y = b.y - cameraY;
 
-    // ① PNGタイル
-    if(b.image && images[b.image]){
+    // PNG描画（読み込み完了時のみ）
+    if(b.image && images[b.image] && images[b.image].complete){
       ctx.drawImage(images[b.image], x, y, b.size, b.size);
     }
 
-    // ② 床デザイン描画
+    // 床描画
     else if(b.drawType === "floor"){
       ctx.fillStyle = "#7b3f61";
       ctx.fillRect(x, y, b.size, b.size);
@@ -179,7 +190,7 @@ function draw(){
       ctx.strokeRect(x, y, b.size, b.size);
     }
 
-    // ③ 通常色タイル
+    // 通常色
     else if(b.color){
       ctx.fillStyle = b.color;
       ctx.fillRect(x, y, b.size, b.size);
@@ -199,6 +210,7 @@ function draw(){
   requestAnimationFrame(draw);
 }
 draw();
+
 // =====================
 // 当たり判定
 // =====================
@@ -219,8 +231,8 @@ function canMove(newX,newY){
 }
 
 function getTileAt(x,y){
-  const col = Math.floor(x / TILE);
-  const row = Math.floor(y / TILE);
+  const col = Math.floor((x + player.size/2) / TILE);
+  const row = Math.floor((y + player.size/2) / TILE);
   return mapData[row]?.[col];
 }
 

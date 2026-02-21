@@ -22,10 +22,10 @@
 
   "tileTypes": {
     "壁":      { "color": "gray",     "solid": true  },
-    "机":      { "image": "desk", "color": "brown", "solid": true  },
-    "特別机":  { "color": "brown",    "solid": true  },
-    "よ":      { "color": "brown",    "solid": true  },
-    "A":       { "color": "brown",    "solid": true  },
+    "机":      { "image": "desk", "drawType": "floor", "solid": true  },
+    "特別机":  { "drawType": "floor","image":"desk","solid": true  },
+    "よ":      { "drawType": "floor","image":"desk","solid": true  },
+    "A":      { "drawType": "floor","image":"desk","solid": true  },
     "黒板":    { "color": "green",    "solid": true  },
     "教卓":    { "color": "darkred",  "solid": true  },
     "扉":      { "color": "orange",   "solid": true  },

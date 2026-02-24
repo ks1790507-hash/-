@@ -79,5 +79,57 @@
        ">
   </div>
 </div>
+  <!-- 特殊イベントレイヤー（最上位） -->
+<div id="specialOverlay" style="
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  display:none;
+  z-index:10000;
+  background:black;
+">
+
+  <!-- 背景画像 -->
+  <img id="specialBg" style="
+    position:absolute;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  ">
+
+  <!-- キャラ -->
+  <img id="specialCharacter" style="
+    position:absolute;
+    bottom:120px;
+    left:50%;
+    transform:translateX(-50%);
+    height:400px;
+  ">
+
+  <!-- 名前 -->
+  <div id="specialName" style="
+    position:absolute;
+    bottom:180px;
+    left:40px;
+    color:#ccc;
+    font-size:22px;
+  "></div>
+
+  <!-- テキスト -->
+  <div id="specialText" style="
+    position:absolute;
+    bottom:0;
+    width:100%;
+    height:140px;
+    background:rgba(0,0,0,0.85);
+    color:white;
+    font-size:24px;
+    padding:30px 40px;
+    box-sizing:border-box;
+  "></div>
+
+</div>
 </body>
 </html>

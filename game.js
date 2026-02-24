@@ -23,8 +23,7 @@ let mapHeight = 0;
 
 let cameraX = 0;
 let cameraY = 0;
-// タイルごとの回数記録
-let tileTouchCount = {};
+
 // =====================
 // BGM
 // =====================
@@ -74,6 +73,7 @@ function loadImage(name, src){
   images[name] = img;
 }
 loadImage("desk", "desk.png");
+loadImage("window", "window.png");
 
 // =====================
 // プレイヤー
@@ -91,28 +91,78 @@ let isMoving = false;
 const moveSpeed = 8;
 
 // =====================
-// 会話
+// 新会話システム
 // =====================
 let isTalking = false;
-let talkLines = [];
-let talkIndex = 0;
-const messageBox = document.getElementById("messageBox");
+
+const dialogueUI = document.getElementById("dialogueUI");
+const textBox = document.getElementById("textBox");
+const nameBox = document.getElementById("nameBox");
+const characterSprite = document.getElementById("characterSprite");
+
+let dialogueData = [];
+let dialogueIndex = 0;
+let charIndex = 0;
+let isTyping = false;
+let fullText = "";
 
 function startTalk(lines){
+
   isTalking = true;
-  talkLines = lines;
-  talkIndex = 0;
-  messageBox.style.display = "flex";
-  messageBox.textContent = talkLines[talkIndex];
+  dialogueUI.style.display = "flex";
+
+  dialogueData = lines.map(text => ({
+    name: "ノズル",
+    text: text,
+    sprite: "通常会.png"
+  }));
+
+  dialogueIndex = 0;
+  nextDialogue();
 }
 
-function showMessage(text){
-  messageBox.textContent = text;
+function typeText(text){
+  isTyping = true;
+  fullText = text;
+  charIndex = 0;
+  textBox.innerHTML = "";
+  typeWriter();
+}
+
+function typeWriter(){
+  if(charIndex < fullText.length){
+    textBox.innerHTML += fullText[charIndex];
+    charIndex++;
+    setTimeout(typeWriter,40);
+  }else{
+    isTyping = false;
+  }
+}
+
+function nextDialogue(){
+
+  if(isTyping){
+    textBox.innerHTML = fullText;
+    isTyping = false;
+    return;
+  }
+
+  if(dialogueIndex >= dialogueData.length){
+    endTalk();
+    return;
+  }
+
+  let d = dialogueData[dialogueIndex];
+  nameBox.textContent = d.name;
+  characterSprite.src = d.sprite;
+  typeText(d.text);
+
+  dialogueIndex++;
 }
 
 function endTalk(){
   isTalking = false;
-  messageBox.style.display = "none";
+  dialogueUI.style.display = "none";
 }
 
 // =====================
@@ -178,7 +228,8 @@ function createMap(){
           image:type.image || null,
           color:type.color || null,
           drawType:type.drawType || null,
-          warp:type.warp || null
+          warp:type.warp || null,
+          tile:tile
         });
       }
     }
@@ -283,7 +334,7 @@ function draw(){
 draw();
 
 // =====================
-// 当たり判定
+// 移動判定
 // =====================
 function canMove(newX,newY){
   for(let b of blocks){
@@ -310,15 +361,10 @@ function getTileAt(x,y){
 // =====================
 document.addEventListener("keydown", e=>{
 
+  // 会話中
   if(isTalking){
-    if(e.code==="Space"){
-      talkIndex++;
-      if(talkIndex<talkLines.length){
-        showMessage(talkLines[talkIndex]);
-      }else{
-        endTalk();
-      }
-    }
+    if(e.code==="Space") nextDialogue();
+    if(e.code==="KeyT") endTalk();
     return;
   }
 
@@ -351,36 +397,7 @@ document.addEventListener("keydown", e=>{
     }
 
     if(currentEvents[tile]){
-       // 回数をカウント
-       if(!tileTouchCount[tile]){
-         tileTouchCount[tile] = 0;
-       }
-       tileTouchCount[tile]++;
-     
-       // 窓だけ特別処理
-       if(tile === "窓"){
-     
-         if(tileTouchCount[tile] === 1){
-           startTalk(currentEvents[tile]);
-         }
-         else if(tileTouchCount[tile] === 2){
-           startTalk(["また窓を見た…","虫さんだっていつかはトコトコしてたんだ…"]);
-         }
-         else if(tileTouchCount[tile] >= 3){
-           startTalk([
-             "",
-             "突然窓の外から衝撃音がした！",
-             "？？？"
-           ]);
-     
-           // ここでイベント発生させられる
-           console.log("イベント発生！");
-           // 例: 怒りゲージ増加とか
-         }
-     
-       } else {
-         startTalk(currentEvents[tile]);
-       }
+      startTalk(currentEvents[tile]);
     }
   }
 });

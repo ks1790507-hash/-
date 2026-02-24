@@ -25,6 +25,23 @@ let cameraX = 0;
 let cameraY = 0;
 
 // =====================
+// 窓特殊イベント用
+// =====================
+let windowTouchCount = 0;
+let isSpecialEvent = false;
+
+const specialOverlay = document.getElementById("specialOverlay");
+const specialBg = document.getElementById("specialBg");
+const specialCharacter = document.getElementById("specialCharacter");
+const specialName = document.getElementById("specialName");
+const specialText = document.getElementById("specialText");
+
+let specialLines = [];
+let specialIndex = 0;
+let specialCharIndex = 0;
+let isSpecialTyping = false;
+let fullSpecialText = "";
+// =====================
 // BGM
 // =====================
 let currentBGM = null;
@@ -416,3 +433,65 @@ document.addEventListener("keydown", e=>{
     }
   }
 });
+function startSpecialEvent(){
+  isTalking = true;
+  isSpecialEvent = true;
+
+  // 背景画像（ここ好きな画像に変更可）
+  specialBg.src = "拝啓.png";
+
+  // キャラ画像
+  specialCharacter.src = "佐藤.png";
+
+  specialLines = [
+    "………………",
+    "やっと見つけた",
+    "ずっと窓から見ていたよ",
+    "君が来るのを"
+  ];
+
+  specialIndex = 0;
+  specialOverlay.style.display = "block";
+  nextSpecialDialogue();
+}
+
+function typeSpecialText(text){
+  isSpecialTyping = true;
+  fullSpecialText = text;
+  specialCharIndex = 0;
+  specialText.innerHTML = "";
+  typeSpecialWriter();
+}
+
+function typeSpecialWriter(){
+  if(specialCharIndex < fullSpecialText.length){
+    specialText.innerHTML += fullSpecialText[specialCharIndex];
+    specialCharIndex++;
+    setTimeout(typeSpecialWriter, 35);
+  }else{
+    isSpecialTyping = false;
+  }
+}
+
+function nextSpecialDialogue(){
+  if(isSpecialTyping){
+    specialText.innerHTML = fullSpecialText;
+    isSpecialTyping = false;
+    return;
+  }
+
+  if(specialIndex >= specialLines.length){
+    endSpecialEvent();
+    return;
+  }
+
+  specialName.textContent = "ノズル";
+  typeSpecialText(specialLines[specialIndex]);
+  specialIndex++;
+}
+
+function endSpecialEvent(){
+  specialOverlay.style.display = "none";
+  isTalking = false;
+  isSpecialEvent = false;
+}

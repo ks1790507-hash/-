@@ -20,7 +20,7 @@
 
   "spawn": { "x": 64, "y": 64 },
 
-  "bgm": "classroom.mp3",
+ 
   "mapName": "3年2組",
 
   "tileTypes": {

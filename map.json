@@ -43,7 +43,7 @@
     "後": {
       "color": "orange",
       "solid": true,
-      "warp": { "map": "hallway", "x": 4800, "y": 64 }
+      "warp": { "map": "hallway", "x": 1460, "y": 32 }
     },
 
     "　": { "solid": false, "drawType": "floor" }

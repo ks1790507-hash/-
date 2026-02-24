@@ -18,7 +18,6 @@ let blocks = [];
 let currentMap = "";
 let currentEvents = {};
 let currentTileTypes = {};
-
 let mapWidth = 0;
 let mapHeight = 0;
 
@@ -26,16 +25,53 @@ let cameraX = 0;
 let cameraY = 0;
 
 // =====================
-// 画像読み込み
+// BGM
+// =====================
+let currentBGM = null;
+
+function playBGM(src){
+  if(currentBGM){
+    currentBGM.pause();
+    currentBGM = null;
+  }
+  const audio = new Audio(src);
+  audio.loop = true;
+  audio.volume = 0.5;
+  audio.play();
+  currentBGM = audio;
+}
+
+// =====================
+// フェード
+// =====================
+let fadeAlpha = 0;
+let isFading = false;
+let fadeMode = null;
+let fadeCallback = null;
+
+function startFade(callback){
+  isFading = true;
+  fadeMode = "out";
+  fadeAlpha = 0;
+  fadeCallback = callback;
+}
+
+// =====================
+// マップ名表示
+// =====================
+let mapTitle = "";
+let mapTitleTimer = 0;
+let mapTitleAlpha = 0;
+
+// =====================
+// 画像
 // =====================
 const images = {};
-
 function loadImage(name, src){
   const img = new Image();
   img.src = src;
   images[name] = img;
 }
-
 loadImage("desk", "desk.png");
 
 // =====================
@@ -79,9 +115,23 @@ function endTalk(){
 }
 
 // =====================
+// 扉リンク設定
+// =====================
+const doorLinks = {
+  "map": {
+    "前扉": { map: "hallway", spawn: { x: 100, y: 64 } },
+    "後扉": { map: "hallway", spawn: { x: 500, y: 64 } }
+  },
+  "hallway": {
+    "前教室扉": { map: "map", spawn: { x: 448, y: 64 } },
+    "後教室扉": { map: "map", spawn: { x: 448, y: 448 } }
+  }
+};
+
+// =====================
 // マップ読み込み
 // =====================
-function loadMap(name){
+function loadMap(name, customSpawn=null){
   fetch("./" + name + ".json")
     .then(res => res.json())
     .then(data => {
@@ -94,14 +144,28 @@ function loadMap(name){
       mapWidth = mapData[0].length * TILE;
       mapHeight = mapData.length * TILE;
 
-      if(data.spawn){
+      if(customSpawn){
+        player.x = customSpawn.x;
+        player.y = customSpawn.y;
+      } else if(data.spawn){
         player.x = data.spawn.x;
         player.y = data.spawn.y;
-        targetX = player.x;
-        targetY = player.y;
       }
 
+      targetX = player.x;
+      targetY = player.y;
+
       createMap();
+
+      if(data.bgm){
+        playBGM(data.bgm);
+      }
+
+      if(data.mapName){
+        mapTitle = data.mapName;
+        mapTitleTimer = 180;
+        mapTitleAlpha = 0;
+      }
     });
 }
 
@@ -112,24 +176,20 @@ loadMap("map");
 // =====================
 function createMap(){
   blocks = [];
-
   for(let row=0; row<mapData.length; row++){
     for(let col=0; col<mapData[row].length; col++){
-
       const tile = mapData[row][col];
       const x = col * TILE;
       const y = row * TILE;
       const type = currentTileTypes[tile];
-
       if(type){
         blocks.push({
-          x: x,
-          y: y,
-          size: TILE,
-          solid: type.solid || false,
-          image: type.image || null,
-          color: type.color || null,
-          drawType: type.drawType || null
+          x,y,
+          size:TILE,
+          solid:type.solid || false,
+          image:type.image || null,
+          color:type.color || null,
+          drawType:type.drawType || null
         });
       }
     }
@@ -141,17 +201,14 @@ function createMap(){
 // =====================
 function draw(){
 
-  // スムーズ移動
   if(isMoving){
     if(player.x < targetX) player.x += moveSpeed;
     if(player.x > targetX) player.x -= moveSpeed;
     if(player.y < targetY) player.y += moveSpeed;
     if(player.y > targetY) player.y -= moveSpeed;
 
-    if(
-      Math.abs(player.x - targetX) <= moveSpeed &&
-      Math.abs(player.y - targetY) <= moveSpeed
-    ){
+    if(Math.abs(player.x-targetX)<=moveSpeed &&
+       Math.abs(player.y-targetY)<=moveSpeed){
       player.x = targetX;
       player.y = targetY;
       isMoving = false;
@@ -160,52 +217,78 @@ function draw(){
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // カメラ
   cameraX = player.x - canvas.width/2 + player.size/2;
   cameraY = player.y - canvas.height/2 + player.size/2;
 
   cameraX = Math.max(0, Math.min(cameraX, mapWidth - canvas.width));
   cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
 
-  // タイル描画
-  blocks.forEach(b => {
-
+  blocks.forEach(b=>{
     const x = b.x - cameraX;
     const y = b.y - cameraY;
 
-    // PNG描画（読み込み完了時のみ）
     if(b.image && images[b.image] && images[b.image].complete){
       ctx.drawImage(images[b.image], x, y, b.size, b.size);
     }
-
-    // 床描画
     else if(b.drawType === "floor"){
-      ctx.fillStyle = "#7b3f61";
-      ctx.fillRect(x, y, b.size, b.size);
-
-      ctx.fillStyle = "#a85c7d";
-      ctx.fillRect(x, y, b.size, 4);
-
-      ctx.strokeStyle = "#5e2e47";
-      ctx.strokeRect(x, y, b.size, b.size);
+      ctx.fillStyle="#7b3f61";
+      ctx.fillRect(x,y,b.size,b.size);
+      ctx.strokeStyle="#5e2e47";
+      ctx.strokeRect(x,y,b.size,b.size);
     }
-
-    // 通常色
     else if(b.color){
-      ctx.fillStyle = b.color;
-      ctx.fillRect(x, y, b.size, b.size);
+      ctx.fillStyle=b.color;
+      ctx.fillRect(x,y,b.size,b.size);
     }
-
   });
 
   // プレイヤー
   ctx.fillStyle = player.color;
-  ctx.fillRect(
-    player.x - cameraX,
-    player.y - cameraY,
-    player.size,
-    player.size
-  );
+  ctx.fillRect(player.x-cameraX, player.y-cameraY, player.size, player.size);
+
+  // ===== マップ名 =====
+  if(mapTitleTimer>0){
+    mapTitleTimer--;
+
+    if(mapTitleTimer>120){
+      mapTitleAlpha +=0.05;
+      if(mapTitleAlpha>1) mapTitleAlpha=1;
+    }else if(mapTitleTimer<60){
+      mapTitleAlpha -=0.05;
+      if(mapTitleAlpha<0) mapTitleAlpha=0;
+    }
+
+    ctx.save();
+    ctx.globalAlpha = mapTitleAlpha;
+    ctx.fillStyle="white";
+    ctx.font="40px sans-serif";
+    ctx.textAlign="center";
+    ctx.fillText(mapTitle, canvas.width/2, 80);
+    ctx.restore();
+  }
+
+  // ===== フェード =====
+  if(isFading){
+    if(fadeMode==="out"){
+      fadeAlpha+=0.05;
+      if(fadeAlpha>=1){
+        fadeAlpha=1;
+        fadeMode="in";
+        if(fadeCallback){
+          fadeCallback();
+          fadeCallback=null;
+        }
+      }
+    }else{
+      fadeAlpha-=0.05;
+      if(fadeAlpha<=0){
+        fadeAlpha=0;
+        isFading=false;
+      }
+    }
+    ctx.fillStyle="rgba(0,0,0,"+fadeAlpha+")";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
 
   requestAnimationFrame(draw);
 }
@@ -217,12 +300,10 @@ draw();
 function canMove(newX,newY){
   for(let b of blocks){
     if(b.solid){
-      if(
-        newX < b.x + b.size &&
-        newX + player.size > b.x &&
-        newY < b.y + b.size &&
-        newY + player.size > b.y
-      ){
+      if(newX < b.x+b.size &&
+         newX+player.size > b.x &&
+         newY < b.y+b.size &&
+         newY+player.size > b.y){
         return false;
       }
     }
@@ -231,8 +312,8 @@ function canMove(newX,newY){
 }
 
 function getTileAt(x,y){
-  const col = Math.floor((x + player.size/2) / TILE);
-  const row = Math.floor((y + player.size/2) / TILE);
+  const col = Math.floor((x+player.size/2)/TILE);
+  const row = Math.floor((y+player.size/2)/TILE);
   return mapData[row]?.[col];
 }
 
@@ -242,9 +323,9 @@ function getTileAt(x,y){
 document.addEventListener("keydown", e=>{
 
   if(isTalking){
-    if(e.code === "Space"){
+    if(e.code==="Space"){
       talkIndex++;
-      if(talkIndex < talkLines.length){
+      if(talkIndex<talkLines.length){
         showMessage(talkLines[talkIndex]);
       }else{
         endTalk();
@@ -253,30 +334,28 @@ document.addEventListener("keydown", e=>{
     return;
   }
 
-  if(isMoving) return;
+  if(isMoving || isFading) return;
 
-  let newX = player.x;
-  let newY = player.y;
+  let newX=player.x;
+  let newY=player.y;
 
-  if(e.key === "ArrowUp") newY -= TILE;
-  if(e.key === "ArrowDown") newY += TILE;
-  if(e.key === "ArrowLeft") newX -= TILE;
-  if(e.key === "ArrowRight") newX += TILE;
+  if(e.key==="ArrowUp") newY-=TILE;
+  if(e.key==="ArrowDown") newY+=TILE;
+  if(e.key==="ArrowLeft") newX-=TILE;
+  if(e.key==="ArrowRight") newX+=TILE;
 
   if(canMove(newX,newY)){
-    targetX = newX;
-    targetY = newY;
-    isMoving = true;
+    targetX=newX;
+    targetY=newY;
+    isMoving=true;
   }else{
-
     const tile = getTileAt(newX,newY);
 
-    if(tile === "扉"){
-      if(currentMap === "map"){
-        loadMap("hallway");
-      }else{
-        loadMap("map");
-      }
+    if(doorLinks[currentMap] && doorLinks[currentMap][tile]){
+      const door = doorLinks[currentMap][tile];
+      startFade(()=>{
+        loadMap(door.map, door.spawn);
+      });
       return;
     }
 

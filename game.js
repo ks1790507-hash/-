@@ -91,77 +91,70 @@ let isMoving = false;
 const moveSpeed = 8;
 
 // =====================
-// 会話システム
+// コメント表示システム（下部UI・最適版）
 // =====================
 let isTalking = false;
+const messageBox = document.getElementById("messageBox");
 
-const dialogueUI = document.getElementById("dialogueUI");
-const textBox = document.getElementById("textBox");
-const nameBox = document.getElementById("nameBox");
-const characterSprite = document.getElementById("characterSprite");
-
-let dialogueData = [];
-let dialogueIndex = 0;
+let messageLines = [];
+let messageIndex = 0;
 let charIndex = 0;
 let isTyping = false;
-let fullText = "";
+let fullMessage = "";
 
+// コメント開始（イベントから呼ばれる）
 function startTalk(lines){
   if(isTalking || !lines) return;
 
   isTalking = true;
-  dialogueUI.style.display = "flex";
+  messageBox.style.display = "flex";
 
-  dialogueData = lines.map(text => ({
-    name: "佐藤",
-    text: text,
-    sprite: "佐藤.png"
-  }));
-
-  dialogueIndex = 0;
-  nextDialogue();
+  messageLines = lines;
+  messageIndex = 0;
+  nextMessage();
 }
 
-function typeText(text){
+// タイプ演出
+function typeMessage(text){
   isTyping = true;
-  fullText = text;
+  fullMessage = text;
   charIndex = 0;
-  textBox.innerHTML = "";
+  messageBox.innerHTML = "";
   typeWriter();
 }
 
 function typeWriter(){
-  if(charIndex < fullText.length){
-    textBox.innerHTML += fullText[charIndex];
+  if(charIndex < fullMessage.length){
+    messageBox.innerHTML += fullMessage[charIndex];
     charIndex++;
-    setTimeout(typeWriter, 35);
+    setTimeout(typeWriter, 30); // 速度調整可
   }else{
     isTyping = false;
   }
 }
 
-function nextDialogue(){
+// 次の文章
+function nextMessage(){
   if(isTyping){
-    textBox.innerHTML = fullText;
+    messageBox.innerHTML = fullMessage;
     isTyping = false;
     return;
   }
 
-  if(dialogueIndex >= dialogueData.length){
+  if(messageIndex >= messageLines.length){
     endTalk();
     return;
   }
 
-  const d = dialogueData[dialogueIndex];
-  nameBox.textContent = d.name;
-  characterSprite.src = d.sprite;
-  typeText(d.text);
-  dialogueIndex++;
+  typeMessage(messageLines[messageIndex]);
+  messageIndex++;
 }
 
+// 終了
 function endTalk(){
   isTalking = false;
-  dialogueUI.style.display = "none";
+  messageBox.style.display = "none";
+  messageBox.innerHTML = "";
 }
 
 // =====================
@@ -396,7 +389,7 @@ draw();
 document.addEventListener("keydown", e=>{
 
   if(isTalking){
-    if(e.code==="Space") nextDialogue();
+    if(e.code==="Space") nextMessage();
     if(e.code==="KeyT") endTalk();
     return;
   }

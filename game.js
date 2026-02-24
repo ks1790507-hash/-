@@ -1,430 +1,188 @@
-// =====================
-// canvas取得
-// =====================
+// ===== キャンバス設定 =====
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-function resizeCanvas(){
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-const TILE = 32;
+// ===== UI取得 =====
+const messageBox = document.getElementById("messageBox");
+const dialogueUI = document.getElementById("dialogueUI");
+const characterSprite = document.getElementById("characterSprite");
+const nameBox = document.getElementById("nameBox");
+const textBox = document.getElementById("textBox");
 
-let mapData = [];
-let blocks = [];
-let currentMap = "";
-let currentEvents = {};
-let currentTileTypes = {};
-let mapWidth = 0;
-let mapHeight = 0;
-
-let cameraX = 0;
-let cameraY = 0;
-
-// =====================
-// 窓特殊イベント用（最重要）
-// =====================
-let windowTouchCount = 0;
-let isSpecialEvent = false;
-
-const specialOverlay = document.getElementById("specialOverlay");
-const specialBg = document.getElementById("specialBg");
-const specialCharacter = document.getElementById("specialCharacter");
-const specialName = document.getElementById("specialName");
-const specialText = document.getElementById("specialText");
-
-let specialLines = [];
-let specialIndex = 0;
-let specialCharIndex = 0;
-let isSpecialTyping = false;
-let fullSpecialText = "";
-
-// =====================
-// BGM
-// =====================
-let currentBGM = null;
-
-function playBGM(src){
-  if(currentBGM){
-    currentBGM.pause();
-    currentBGM = null;
-  }
-  const audio = new Audio(src);
-  audio.loop = true;
-  audio.volume = 0.5;
-  audio.play().catch(()=>{});
-  currentBGM = audio;
-}
-
-// =====================
-// フェード
-// =====================
-let fadeAlpha = 0;
-let isFading = false;
-let fadeMode = null;
-let fadeCallback = null;
-
-function startFade(callback){
-  isFading = true;
-  fadeMode = "out";
-  fadeAlpha = 0;
-  fadeCallback = callback;
-}
-
-// =====================
-// 画像
-// =====================
-const images = {};
-function loadImage(name, src){
-  const img = new Image();
-  img.src = src;
-  images[name] = img;
-}
-loadImage("desk", "desk.png");
-loadImage("window", "window.png");
-
-// =====================
-// プレイヤー
-// =====================
+// ===== プレイヤー =====
 const player = {
-  x: 0,
-  y: 0,
-  size: TILE,
+  x: 200,
+  y: 200,
+  size: 32,
+  speed: 3,
   color: "blue"
 };
 
-let targetX = 0;
-let targetY = 0;
-let isMoving = false;
-const moveSpeed = 8;
+// ===== マップ設定 =====
+const tileSize = 64;
+const mapCols = 20;
+const mapRows = 15;
+const mapWidth = mapCols * tileSize;
+const mapHeight = mapRows * tileSize;
 
-// =====================
-// 下コメントシステム（スクショ形式）
-// =====================
-let isTalking = false;
-const messageBox = document.getElementById("messageBox");
+// ===== キー入力 =====
+const keys = {};
+document.addEventListener("keydown", e => keys[e.key] = true);
+document.addEventListener("keyup", e => keys[e.key] = false);
 
-let messageLines = [];
-let messageIndex = 0;
-let charIndex = 0;
-let isTyping = false;
-let fullMessage = "";
+// ===== カメラ =====
+let cameraX = 0;
+let cameraY = 0;
 
-function startTalk(lines){
-  if(isTalking || isSpecialEvent || !lines) return;
+// ===== 窓イベント用 =====
+let windowTouchCount = 0;
+let specialEvent = false;
 
-  isTalking = true;
+// 窓の位置（好きに変えられる）
+const windowObject = {
+  x: 500,
+  y: 300,
+  width: 64,
+  height: 64
+};
+
+// ===== 当たり判定 =====
+function isColliding(a, b) {
+  return (
+    a.x < b.x + b.width &&
+    a.x + a.size > b.x &&
+    a.y < b.y + b.height &&
+    a.y + a.size > b.y
+  );
+}
+
+// ===== メッセージ表示 =====
+function showMessage(text) {
   messageBox.style.display = "flex";
+  messageBox.textContent = text;
 
-  messageLines = lines;
-  messageIndex = 0;
-  nextMessage();
+  setTimeout(() => {
+    if (!specialEvent) {
+      messageBox.style.display = "none";
+    }
+  }, 2000);
 }
 
-function typeMessage(text){
-  isTyping = true;
-  fullMessage = text;
-  charIndex = 0;
-  messageBox.innerHTML = "";
-  typeWriter();
+// ===== 特殊会話開始 =====
+function startSpecialDialogue() {
+  specialEvent = true;
+
+  // 画面最上位レイヤー表示
+  dialogueUI.style.display = "flex";
+
+  // 背景（黒＋画面いっぱい）
+  dialogueUI.style.background = "black";
+
+  // キャラ画像（好きな画像に変更OK）
+  characterSprite.src = "character.png"; // ←画像ファイル名
+
+  // 名前
+  nameBox.textContent = "？？？";
+
+  // 会話テキスト
+  textBox.textContent = "……やっと三回、触ったね。";
 }
 
-function typeWriter(){
-  if(charIndex < fullMessage.length){
-    messageBox.innerHTML += fullMessage[charIndex];
-    charIndex++;
-    setTimeout(typeWriter, 30);
-  }else{
-    isTyping = false;
+// ===== 会話送り（スペース） =====
+document.addEventListener("keydown", (e) => {
+  if (!specialEvent) return;
+
+  if (e.code === "Space") {
+    textBox.textContent = "窓の向こう側を、見てしまったんだね…。";
   }
-}
+});
 
-function nextMessage(){
-  if(isTyping){
-    messageBox.innerHTML = fullMessage;
-    isTyping = false;
-    return;
-  }
+// ===== 更新処理 =====
+function update() {
+  // 移動
+  if (keys["ArrowUp"] || keys["w"]) player.y -= player.speed;
+  if (keys["ArrowDown"] || keys["s"]) player.y += player.speed;
+  if (keys["ArrowLeft"] || keys["a"]) player.x -= player.speed;
+  if (keys["ArrowRight"] || keys["d"]) player.x += player.speed;
 
-  if(messageIndex >= messageLines.length){
-    endTalk();
-    return;
-  }
+  // マップ外に出ない制御
+  player.x = Math.max(0, Math.min(player.x, mapWidth - player.size));
+  player.y = Math.max(0, Math.min(player.y, mapHeight - player.size));
 
-  typeMessage(messageLines[messageIndex]);
-  messageIndex++;
-}
+  // カメラ（最重要修正：余白バグ完全防止）
+  cameraX = player.x - canvas.width / 2 + player.size / 2;
+  cameraY = player.y - canvas.height / 2 + player.size / 2;
 
-function endTalk(){
-  isTalking = false;
-  messageBox.style.display = "none";
-  messageBox.innerHTML = "";
-}
+  // 左上制限
+  cameraX = Math.max(0, cameraX);
+  cameraY = Math.max(0, cameraY);
 
-// =====================
-// 特殊イベント（窓3回）
-// =====================
-function startSpecialEvent(){
-  isSpecialEvent = true;
-  isTalking = true;
+  // 右下制限（これでベージュ余白が消える）
+  cameraX = Math.min(cameraX, mapWidth - canvas.width);
+  cameraY = Math.min(cameraY, mapHeight - canvas.height);
 
-  specialBg.src = "拝啓.png"; // 好きな背景
-  specialCharacter.src = "佐藤.png"; // キャラ画像
-  specialName.textContent = "ノズル";
+  // ===== 窓接触判定 =====
+  if (!specialEvent && isColliding(player, windowObject)) {
+    if (!windowObject.touched) {
+      windowObject.touched = true;
+      windowTouchCount++;
 
-  specialLines = [
-    "………………",
-    "やっと気づいたね",
-    "ずっと窓から見ていたよ",
-    "君が来るのを"
-  ];
-
-  specialIndex = 0;
-  specialOverlay.style.display = "block";
-  nextSpecialDialogue();
-}
-
-function typeSpecialText(text){
-  isSpecialTyping = true;
-  fullSpecialText = text;
-  specialCharIndex = 0;
-  specialText.innerHTML = "";
-  typeSpecialWriter();
-}
-
-function typeSpecialWriter(){
-  if(specialCharIndex < fullSpecialText.length){
-    specialText.innerHTML += fullSpecialText[specialCharIndex];
-    specialCharIndex++;
-    setTimeout(typeSpecialWriter, 35);
-  }else{
-    isSpecialTyping = false;
-  }
-}
-
-function nextSpecialDialogue(){
-  if(isSpecialTyping){
-    specialText.innerHTML = fullSpecialText;
-    isSpecialTyping = false;
-    return;
-  }
-
-  if(specialIndex >= specialLines.length){
-    endSpecialEvent();
-    return;
-  }
-
-  typeSpecialText(specialLines[specialIndex]);
-  specialIndex++;
-}
-
-function endSpecialEvent(){
-  specialOverlay.style.display = "none";
-  isSpecialEvent = false;
-  isTalking = false;
-  windowTouchCount = 0;
-}
-
-// =====================
-// マップ読み込み
-// =====================
-function loadMap(name, customSpawn=null){
-  fetch("./" + name + ".json?v=2")
-    .then(res => res.json())
-    .then(data => {
-
-      currentMap = name;
-      mapData = data.tiles;
-      currentEvents = data.events || {};
-      currentTileTypes = data.tileTypes || {};
-
-      mapWidth = mapData[0].length * TILE;
-      mapHeight = mapData.length * TILE;
-
-      if(customSpawn){
-        player.x = customSpawn.x;
-        player.y = customSpawn.y;
-      } else if(data.spawn){
-        player.x = data.spawn.x;
-        player.y = data.spawn.y;
-      }
-
-      targetX = player.x;
-      targetY = player.y;
-
-      createMap();
-
-      if(data.bgm){
-        playBGM(data.bgm);
-      }
-    });
-}
-
-loadMap("map");
-
-// =====================
-// マップ生成
-// =====================
-function createMap(){
-  blocks = [];
-  for(let row=0; row<mapData.length; row++){
-    for(let col=0; col<mapData[row].length; col++){
-      const tile = mapData[row][col];
-      const x = col * TILE;
-      const y = row * TILE;
-      const type = currentTileTypes[tile];
-
-      if(type){
-        blocks.push({
-          x,y,
-          size:TILE,
-          solid:type.solid || false,
-          warp:type.warp || null,
-          tile:tile
-        });
+      if (windowTouchCount === 1) {
+        showMessage("窓だ…");
+      } else if (windowTouchCount === 2) {
+        showMessage("なんだか、嫌な感じがする…");
+      } else if (windowTouchCount >= 3) {
+        startSpecialDialogue();
       }
     }
+  } else {
+    windowObject.touched = false;
   }
 }
 
-// =====================
-// タイル取得
-// =====================
-function getTileAt(x,y){
-  const col = Math.floor((x + player.size/2) / TILE);
-  const row = Math.floor((y + player.size/2) / TILE);
-  return mapData[row]?.[col];
-}
+// ===== 描画 =====
+function draw() {
+  // 背景
+  ctx.fillStyle = "#f5f5dc";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-// =====================
-// イベント処理（窓3回対応）
-// =====================
-function handleTileEvent(x,y){
-  const tile = getTileAt(x,y);
-  if(!tile) return;
+  ctx.save();
+  ctx.translate(-cameraX, -cameraY);
 
-  const type = currentTileTypes[tile];
+  // 床（マップ）
+  ctx.fillStyle = "#cccccc";
+  ctx.fillRect(0, 0, mapWidth, mapHeight);
 
-  // ★ 窓3回触れたら特殊イベント
-  if(tile === "窓"){
-    windowTouchCount++;
+  // 窓オブジェクト
+  ctx.fillStyle = "#87ceeb";
+  ctx.fillRect(
+    windowObject.x,
+    windowObject.y,
+    windowObject.width,
+    windowObject.height
+  );
 
-    if(windowTouchCount >= 3){
-      startSpecialEvent();
-      return;
-    }
-  }
-
-  // ワープ
-  if(type && type.warp){
-    startFade(()=>{
-      loadMap(type.warp.map, {
-        x: type.warp.x,
-        y: type.warp.y
-      });
-    });
-    return;
-  }
-
-  // 通常イベント
-  if(currentEvents[tile]){
-    startTalk(currentEvents[tile]);
-  }
-}
-
-// =====================
-// 移動判定
-// =====================
-function canMove(newX,newY){
-  for(let b of blocks){
-    if(b.solid){
-      if(newX < b.x+b.size &&
-         newX+player.size > b.x &&
-         newY < b.y+b.size &&
-         newY+player.size > b.y){
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-// =====================
-// 描画
-// =====================
-function draw(){
-
-  if(isMoving){
-    if(player.x < targetX) player.x += moveSpeed;
-    if(player.x > targetX) player.x -= moveSpeed;
-    if(player.y < targetY) player.y += moveSpeed;
-    if(player.y > targetY) player.y -= moveSpeed;
-
-    if(Math.abs(player.x-targetX)<=moveSpeed &&
-       Math.abs(player.y-targetY)<=moveSpeed){
-      player.x = targetX;
-      player.y = targetY;
-      isMoving = false;
-
-      if(!isTalking && !isSpecialEvent){
-        handleTileEvent(player.x, player.y);
-      }
-    }
-  }
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  cameraX = player.x - canvas.width/2 + player.size/2;
-  cameraY = player.y - canvas.height/2 + player.size/2;
-
-  blocks.forEach(b=>{
-    ctx.fillStyle = "#ccc";
-    ctx.fillRect(b.x-cameraX, b.y-cameraY, b.size, b.size);
-  });
-
+  // プレイヤー
   ctx.fillStyle = player.color;
-  ctx.fillRect(player.x-cameraX, player.y-cameraY, player.size, player.size);
+  ctx.fillRect(player.x, player.y, player.size, player.size);
 
-  requestAnimationFrame(draw);
+  ctx.restore();
 }
-draw();
 
-// =====================
-// キー操作
-// =====================
-document.addEventListener("keydown", e=>{
+// ===== ゲームループ =====
+function gameLoop() {
+  update();
+  draw();
+  requestAnimationFrame(gameLoop);
+}
 
-  // 特殊イベント中
-  if(isSpecialEvent){
-    if(e.code === "Space") nextSpecialDialogue();
-    return;
-  }
+gameLoop();
 
-  // 通常会話中
-  if(isTalking){
-    if(e.code==="Space") nextMessage();
-    if(e.code==="KeyT") endTalk();
-    return;
-  }
-
-  if(isMoving || isFading) return;
-
-  let newX=player.x;
-  let newY=player.y;
-
-  if(e.key==="ArrowUp") newY-=TILE;
-  if(e.key==="ArrowDown") newY+=TILE;
-  if(e.key==="ArrowLeft") newX-=TILE;
-  if(e.key==="ArrowRight") newX+=TILE;
-
-  if(canMove(newX,newY)){
-    targetX=newX;
-    targetY=newY;
-    isMoving=true;
-  }else{
-    handleTileEvent(newX,newY);
-  }
+// ===== 画面リサイズ対応 =====
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
 });

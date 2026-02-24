@@ -171,8 +171,8 @@ function startSpecialEvent(){
   isSpecialEvent = true;
   isTalking = true;
 
-  specialBg.src = "event_bg.png"; // 好きな背景
-  specialCharacter.src = "nozle.png"; // キャラ画像
+  specialBg.src = "拝啓.png"; // 好きな背景
+  specialCharacter.src = "佐藤.png"; // キャラ画像
   specialName.textContent = "ノズル";
 
   specialLines = [

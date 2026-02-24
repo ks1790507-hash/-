@@ -25,7 +25,7 @@ let cameraX = 0;
 let cameraY = 0;
 
 // =====================
-// 窓特殊イベント用
+// 窓特殊イベント用（最重要）
 // =====================
 let windowTouchCount = 0;
 let isSpecialEvent = false;
@@ -41,6 +41,7 @@ let specialIndex = 0;
 let specialCharIndex = 0;
 let isSpecialTyping = false;
 let fullSpecialText = "";
+
 // =====================
 // BGM
 // =====================
@@ -74,13 +75,6 @@ function startFade(callback){
 }
 
 // =====================
-// マップ名表示
-// =====================
-let mapTitle = "";
-let mapTitleTimer = 0;
-let mapTitleAlpha = 0;
-
-// =====================
 // 画像
 // =====================
 const images = {};
@@ -108,7 +102,7 @@ let isMoving = false;
 const moveSpeed = 8;
 
 // =====================
-// コメント表示システム（下部UI・最適版）
+// 下コメントシステム（スクショ形式）
 // =====================
 let isTalking = false;
 const messageBox = document.getElementById("messageBox");
@@ -119,9 +113,8 @@ let charIndex = 0;
 let isTyping = false;
 let fullMessage = "";
 
-// コメント開始（イベントから呼ばれる）
 function startTalk(lines){
-  if(isTalking || !lines) return;
+  if(isTalking || isSpecialEvent || !lines) return;
 
   isTalking = true;
   messageBox.style.display = "flex";
@@ -131,7 +124,6 @@ function startTalk(lines){
   nextMessage();
 }
 
-// タイプ演出
 function typeMessage(text){
   isTyping = true;
   fullMessage = text;
@@ -144,13 +136,12 @@ function typeWriter(){
   if(charIndex < fullMessage.length){
     messageBox.innerHTML += fullMessage[charIndex];
     charIndex++;
-    setTimeout(typeWriter, 30); // 速度調整可
+    setTimeout(typeWriter, 30);
   }else{
     isTyping = false;
   }
 }
 
-// 次の文章
 function nextMessage(){
   if(isTyping){
     messageBox.innerHTML = fullMessage;
@@ -167,7 +158,6 @@ function nextMessage(){
   messageIndex++;
 }
 
-// 終了
 function endTalk(){
   isTalking = false;
   messageBox.style.display = "none";
@@ -175,277 +165,19 @@ function endTalk(){
 }
 
 // =====================
-// マップ読み込み
+// 特殊イベント（窓3回）
 // =====================
-function loadMap(name, customSpawn=null){
-  fetch("./" + name + ".json")
-    .then(res => res.json())
-    .then(data => {
-
-      currentMap = name;
-      mapData = data.tiles;
-      currentEvents = data.events || {};
-      currentTileTypes = data.tileTypes || {};
-
-      mapWidth = mapData[0].length * TILE;
-      mapHeight = mapData.length * TILE;
-
-      if(customSpawn){
-        player.x = customSpawn.x;
-        player.y = customSpawn.y;
-      } else if(data.spawn){
-        player.x = data.spawn.x;
-        player.y = data.spawn.y;
-      }
-
-      targetX = player.x;
-      targetY = player.y;
-
-      createMap();
-
-      if(data.bgm){
-        playBGM(data.bgm);
-      }
-
-      if(data.mapName){
-        mapTitle = data.mapName;
-        mapTitleTimer = 180;
-        mapTitleAlpha = 0;
-      }
-    })
-    .catch(err=>{
-      console.error("マップ読み込み失敗:", err);
-    });
-}
-
-loadMap("map");
-
-// =====================
-// マップ生成
-// =====================
-function createMap(){
-  blocks = [];
-  for(let row=0; row<mapData.length; row++){
-    for(let col=0; col<mapData[row].length; col++){
-      const tile = mapData[row][col];
-      const x = col * TILE;
-      const y = row * TILE;
-      const type = currentTileTypes[tile];
-
-      if(type){
-        blocks.push({
-          x,y,
-          size:TILE,
-          solid:type.solid || false,
-          image:type.image || null,
-          color:type.color || null,
-          drawType:type.drawType || null,
-          warp:type.warp || null,
-          tile:tile
-        });
-      }
-    }
-  }
-}
-
-// =====================
-// タイル取得（中心基準）
-// =====================
-function getTileAt(x,y){
-  const col = Math.floor((x + player.size/2) / TILE);
-  const row = Math.floor((y + player.size/2) / TILE);
-  return mapData[row]?.[col];
-}
-
-// =====================
-// 衝突判定
-// =====================
-function canMove(newX,newY){
-  for(const b of blocks){
-    if(!b.solid) continue;
-
-    if(newX < b.x + b.size &&
-       newX + player.size > b.x &&
-       newY < b.y + b.size &&
-       newY + player.size > b.y){
-      return false;
-    }
-  }
-  return true;
-}
-
-// =====================
-// イベント処理（最適化コア）
-// =====================
-function handleTileEvent(x,y){
-  const tile = getTileAt(x,y);
-  if(!tile) return;
-
-  const type = currentTileTypes[tile];
-
-  // ワープ最優先
-  if(type && type.warp){
-    startFade(()=>{
-      loadMap(type.warp.map, {
-        x: type.warp.x,
-        y: type.warp.y
-      });
-    });
-    return;
-  }
-
-  // 会話イベント
-  if(currentEvents[tile]){
-    startTalk(currentEvents[tile]);
-  }
-}
-
-// =====================
-// 描画
-// =====================
-function draw(){
-
-  if(isMoving){
-    if(player.x < targetX) player.x += moveSpeed;
-    if(player.x > targetX) player.x -= moveSpeed;
-    if(player.y < targetY) player.y += moveSpeed;
-    if(player.y > targetY) player.y -= moveSpeed;
-
-    if(Math.abs(player.x-targetX)<=moveSpeed &&
-       Math.abs(player.y-targetY)<=moveSpeed){
-      player.x = targetX;
-      player.y = targetY;
-      isMoving = false;
-
-      // ★ 移動後イベント発火（床も対応）
-      if(!isTalking){
-        handleTileEvent(player.x, player.y);
-      }
-    }
-  }
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  cameraX = player.x - canvas.width/2 + player.size/2;
-  cameraY = player.y - canvas.height/2 + player.size/2;
-
-  cameraX = Math.max(0, Math.min(cameraX, mapWidth - canvas.width));
-  cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
-
-  blocks.forEach(b=>{
-    const x = b.x - cameraX;
-    const y = b.y - cameraY;
-
-    if(b.image && images[b.image]?.complete){
-      ctx.drawImage(images[b.image], x, y, b.size, b.size);
-    }
-    else if(b.drawType === "floor"){
-      ctx.fillStyle="#7b3f61";
-      ctx.fillRect(x,y,b.size,b.size);
-      ctx.strokeStyle="#5e2e47";
-      ctx.strokeRect(x,y,b.size,b.size);
-    }
-    else if(b.color){
-      ctx.fillStyle=b.color;
-      ctx.fillRect(x,y,b.size,b.size);
-    }
-  });
-
-  ctx.fillStyle = player.color;
-  ctx.fillRect(player.x-cameraX, player.y-cameraY, player.size, player.size);
-
-  // マップ名表示
-  if(mapTitleTimer>0){
-    mapTitleTimer--;
-
-    if(mapTitleTimer>120){
-      mapTitleAlpha = Math.min(1, mapTitleAlpha+0.05);
-    }else if(mapTitleTimer<60){
-      mapTitleAlpha = Math.max(0, mapTitleAlpha-0.05);
-    }
-
-    ctx.save();
-    ctx.globalAlpha = mapTitleAlpha;
-    ctx.fillStyle="white";
-    ctx.font="40px sans-serif";
-    ctx.textAlign="center";
-    ctx.fillText(mapTitle, canvas.width/2, 80);
-    ctx.restore();
-  }
-
-  // フェード
-  if(isFading){
-    if(fadeMode==="out"){
-      fadeAlpha+=0.05;
-      if(fadeAlpha>=1){
-        fadeAlpha=1;
-        fadeMode="in";
-        if(fadeCallback){
-          fadeCallback();
-          fadeCallback=null;
-        }
-      }
-    }else{
-      fadeAlpha-=0.05;
-      if(fadeAlpha<=0){
-        fadeAlpha=0;
-        isFading=false;
-      }
-    }
-    ctx.fillStyle="rgba(0,0,0,"+fadeAlpha+")";
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-  }
-
-  requestAnimationFrame(draw);
-}
-draw();
-
-// =====================
-// キー操作（最適版）
-// =====================
-document.addEventListener("keydown", e=>{
-
-  if(isTalking){
-    if(e.code==="Space") nextMessage();
-    if(e.code==="KeyT") endTalk();
-    return;
-  }
-
-  if(isMoving || isFading) return;
-
-  let newX = player.x;
-  let newY = player.y;
-
-  if(e.key==="ArrowUp") newY -= TILE;
-  if(e.key==="ArrowDown") newY += TILE;
-  if(e.key==="ArrowLeft") newX -= TILE;
-  if(e.key==="ArrowRight") newX += TILE;
-
-  // 移動できる場合
-  if(canMove(newX,newY)){
-    targetX = newX;
-    targetY = newY;
-    isMoving = true;
-  }else{
-    // ★ ぶつかった瞬間のイベント（机・黒板など）
-    if(!isTalking){
-      handleTileEvent(newX, newY);
-    }
-  }
-});
 function startSpecialEvent(){
-  isTalking = true;
   isSpecialEvent = true;
+  isTalking = true;
 
-  // 背景画像（ここ好きな画像に変更可）
-  specialBg.src = "拝啓.png";
-
-  // キャラ画像
-  specialCharacter.src = "佐藤.png";
+  specialBg.src = "event_bg.png"; // 好きな背景
+  specialCharacter.src = "nozle.png"; // キャラ画像
+  specialName.textContent = "ノズル";
 
   specialLines = [
     "………………",
-    "やっと見つけた",
+    "やっと気づいたね",
     "ずっと窓から見ていたよ",
     "君が来るのを"
   ];
@@ -485,13 +217,214 @@ function nextSpecialDialogue(){
     return;
   }
 
-  specialName.textContent = "ノズル";
   typeSpecialText(specialLines[specialIndex]);
   specialIndex++;
 }
 
 function endSpecialEvent(){
   specialOverlay.style.display = "none";
-  isTalking = false;
   isSpecialEvent = false;
+  isTalking = false;
+  windowTouchCount = 0;
 }
+
+// =====================
+// マップ読み込み
+// =====================
+function loadMap(name, customSpawn=null){
+  fetch("./" + name + ".json?v=2")
+    .then(res => res.json())
+    .then(data => {
+
+      currentMap = name;
+      mapData = data.tiles;
+      currentEvents = data.events || {};
+      currentTileTypes = data.tileTypes || {};
+
+      mapWidth = mapData[0].length * TILE;
+      mapHeight = mapData.length * TILE;
+
+      if(customSpawn){
+        player.x = customSpawn.x;
+        player.y = customSpawn.y;
+      } else if(data.spawn){
+        player.x = data.spawn.x;
+        player.y = data.spawn.y;
+      }
+
+      targetX = player.x;
+      targetY = player.y;
+
+      createMap();
+
+      if(data.bgm){
+        playBGM(data.bgm);
+      }
+    });
+}
+
+loadMap("map");
+
+// =====================
+// マップ生成
+// =====================
+function createMap(){
+  blocks = [];
+  for(let row=0; row<mapData.length; row++){
+    for(let col=0; col<mapData[row].length; col++){
+      const tile = mapData[row][col];
+      const x = col * TILE;
+      const y = row * TILE;
+      const type = currentTileTypes[tile];
+
+      if(type){
+        blocks.push({
+          x,y,
+          size:TILE,
+          solid:type.solid || false,
+          warp:type.warp || null,
+          tile:tile
+        });
+      }
+    }
+  }
+}
+
+// =====================
+// タイル取得
+// =====================
+function getTileAt(x,y){
+  const col = Math.floor((x + player.size/2) / TILE);
+  const row = Math.floor((y + player.size/2) / TILE);
+  return mapData[row]?.[col];
+}
+
+// =====================
+// イベント処理（窓3回対応）
+// =====================
+function handleTileEvent(x,y){
+  const tile = getTileAt(x,y);
+  if(!tile) return;
+
+  const type = currentTileTypes[tile];
+
+  // ★ 窓3回触れたら特殊イベント
+  if(tile === "窓"){
+    windowTouchCount++;
+
+    if(windowTouchCount >= 3){
+      startSpecialEvent();
+      return;
+    }
+  }
+
+  // ワープ
+  if(type && type.warp){
+    startFade(()=>{
+      loadMap(type.warp.map, {
+        x: type.warp.x,
+        y: type.warp.y
+      });
+    });
+    return;
+  }
+
+  // 通常イベント
+  if(currentEvents[tile]){
+    startTalk(currentEvents[tile]);
+  }
+}
+
+// =====================
+// 移動判定
+// =====================
+function canMove(newX,newY){
+  for(let b of blocks){
+    if(b.solid){
+      if(newX < b.x+b.size &&
+         newX+player.size > b.x &&
+         newY < b.y+b.size &&
+         newY+player.size > b.y){
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+// =====================
+// 描画
+// =====================
+function draw(){
+
+  if(isMoving){
+    if(player.x < targetX) player.x += moveSpeed;
+    if(player.x > targetX) player.x -= moveSpeed;
+    if(player.y < targetY) player.y += moveSpeed;
+    if(player.y > targetY) player.y -= moveSpeed;
+
+    if(Math.abs(player.x-targetX)<=moveSpeed &&
+       Math.abs(player.y-targetY)<=moveSpeed){
+      player.x = targetX;
+      player.y = targetY;
+      isMoving = false;
+
+      if(!isTalking && !isSpecialEvent){
+        handleTileEvent(player.x, player.y);
+      }
+    }
+  }
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  cameraX = player.x - canvas.width/2 + player.size/2;
+  cameraY = player.y - canvas.height/2 + player.size/2;
+
+  blocks.forEach(b=>{
+    ctx.fillStyle = "#ccc";
+    ctx.fillRect(b.x-cameraX, b.y-cameraY, b.size, b.size);
+  });
+
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x-cameraX, player.y-cameraY, player.size, player.size);
+
+  requestAnimationFrame(draw);
+}
+draw();
+
+// =====================
+// キー操作
+// =====================
+document.addEventListener("keydown", e=>{
+
+  // 特殊イベント中
+  if(isSpecialEvent){
+    if(e.code === "Space") nextSpecialDialogue();
+    return;
+  }
+
+  // 通常会話中
+  if(isTalking){
+    if(e.code==="Space") nextMessage();
+    if(e.code==="KeyT") endTalk();
+    return;
+  }
+
+  if(isMoving || isFading) return;
+
+  let newX=player.x;
+  let newY=player.y;
+
+  if(e.key==="ArrowUp") newY-=TILE;
+  if(e.key==="ArrowDown") newY+=TILE;
+  if(e.key==="ArrowLeft") newX-=TILE;
+  if(e.key==="ArrowRight") newX+=TILE;
+
+  if(canMove(newX,newY)){
+    targetX=newX;
+    targetY=newY;
+    isMoving=true;
+  }else{
+    handleTileEvent(newX,newY);
+  }
+});

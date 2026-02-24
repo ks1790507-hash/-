@@ -23,7 +23,8 @@ let mapHeight = 0;
 
 let cameraX = 0;
 let cameraY = 0;
-
+// タイルごとの回数記録
+let tileTouchCount = {};
 // =====================
 // BGM
 // =====================
@@ -350,7 +351,36 @@ document.addEventListener("keydown", e=>{
     }
 
     if(currentEvents[tile]){
-      startTalk(currentEvents[tile]);
+       // 回数をカウント
+       if(!tileTouchCount[tile]){
+         tileTouchCount[tile] = 0;
+       }
+       tileTouchCount[tile]++;
+     
+       // 窓だけ特別処理
+       if(tile === "窓"){
+     
+         if(tileTouchCount[tile] === 1){
+           startTalk(currentEvents[tile]);
+         }
+         else if(tileTouchCount[tile] === 2){
+           startTalk(["また窓を見た…","虫さんだっていつかはトコトコしてたんだ…"]);
+         }
+         else if(tileTouchCount[tile] >= 3){
+           startTalk([
+             "",
+             "突然窓の外から衝撃音がした！",
+             "？？？"
+           ]);
+     
+           // ここでイベント発生させられる
+           console.log("イベント発生！");
+           // 例: 怒りゲージ増加とか
+         }
+     
+       } else {
+         startTalk(currentEvents[tile]);
+       }
     }
   }
 });

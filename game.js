@@ -112,9 +112,9 @@ function startTalk(lines){
   dialogueUI.style.display = "flex";
 
   dialogueData = lines.map(text => ({
-    name: "ノズル",
+    name: "佐藤",
     text: text,
-    sprite: "通常会.png"
+    sprite: "佐藤.png"
   }));
 
   dialogueIndex = 0;

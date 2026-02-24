@@ -43,7 +43,7 @@
       "color": "red",
       "solid": true,
       "warp": { "map": "hallway", "x": 500, "y": 64 }
-    },
+    }
 
   },
 

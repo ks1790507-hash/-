@@ -41,7 +41,7 @@
           "は": {
       "color": "black",
       "solid": true,
-      "warp": { "map": "LOVEの道", "x": 32, "y": 96 }
+      "warp": { "map": "LOVEの道", "x": 1664, "y": 96 }
     },
     "１":{"color":"orange","solid":true},
     "へ":{"color":"red","solid":true},

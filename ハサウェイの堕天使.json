@@ -20,18 +20,25 @@
 
   "tileTypes": {
     "壁": { "color": "gray", "solid": true },
-    
+    "蛇":{"color":"gray","solid":true},
+    "ド":{"color":"gray","solid":true},
+    "わ":{"color":"black","solid":true},
     "で": {
       "color": "black",
       "solid": true,
-      "warp": { "map": "map", "x": 416, "y": 64 }
+      "warp": { "map": "hallway", "x": 32, "y": 32 }
     },
-
-    "後": {
-      "color": "red",
+    "て": {
+      "color": "black",
       "solid": true,
-      "warp": { "map": "map", "x": 416, "y": 448 }
+      "warp": { "map": "hallway", "x": 32, "y": 64 }
     },
+        "け": {
+      "color": "black",
+      "solid": true,
+      "warp": { "map": "hallway", "x": 32, "y": 96 }
+    },
+  
     "１":{"color":"orange","solid":true},
     "へ":{"color":"red","solid":true},
     "　": { "solid": false, "drawType": "floor" }
@@ -39,6 +46,7 @@
 
   "events": {
     "１":["あかない","おそらく作者の知識不足だろう"],
-    "へ":["この先”ハサウェイの堕天使ルート”","開発途中"]
+    "わ":["トイレだ","やめておこう"],
+    "蛇":["冷たい","掃除はゴメンだ"]
   }
 }

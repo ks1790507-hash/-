@@ -10,7 +10,7 @@
   "spawn": { "x": 100, "y": 64 },
 
   "bgm": "hallway.mp3",
-  "mapName": "校舎1階 廊下",
+  "mapName": "２階廊下",
 
   "tileTypes": {
     "壁": { "color": "gray", "solid": true },

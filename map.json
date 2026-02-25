@@ -39,7 +39,7 @@
     "前": {
       "color": "orange",
       "solid": true,
-      "warp": { "map": "hallway", "x": 1504, "y": 32 }
+      "warp": { "map": "hallway", "x": 1792, "y": 32 }
     },
     "後": {
       "color": "orange",

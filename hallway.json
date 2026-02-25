@@ -26,8 +26,12 @@
       "solid": true,
       "warp": { "map": "map", "x": 416, "y": 448 }
     },
+        "へ": {
+      "color": "red",
+      "solid": true,
+      "warp": { "map": "ハサウェイの堕天使", "x": 608, "y":192  }
+    },
     "１":{"color":"orange","solid":true},
-    "へ":{"color":"red","solid":true},
     "　": { "solid": false, "drawType": "floor" }
   },
 

@@ -1,51 +1,46 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <title>学校探検ゲーム</title>
+/* =============================
+   基本設定
+============================= */
 
-  <style>
-    body{
-      margin:0;
-      overflow:hidden;
-      background:black;
-    }
+body{
+  margin:0;
+  background:black;
+  overflow:hidden;
+  font-family:sans-serif;
+}
 
-    canvas{
-      display:block;
-      background:#f5f5dc;
-    }
+canvas{
+  display:block;
+  background:#f5f5dc;
+}
 
-    /* 会話ボックス */
-    #messageBox{
-      position:fixed;
-      bottom:0;
-      left:0;
-      width:100%;
-      height:120px;
-      background:rgba(0,0,0,0.8);
-      color:white;
-      font-size:20px;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      padding:20px;
-      box-sizing:border-box;
-      font-family:sans-serif;
-    }
-  </style>
-</head>
+/* =============================
+   下部メッセージボックス
+============================= */
 
-<body>
+#messageBox{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:120px;
+  background:rgba(0,0,0,0.8);
+  color:white;
+  font-size:20px;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:20px;
+  box-sizing:border-box;
+  z-index:9000;
+}
 
-  <canvas id="gameCanvas"></canvas>
+/* =============================
+   会話UI
+============================= */
 
-  <div id="messageBox"></div>
-
-  <script src="game.js"></script>
-<!-- 会話UI -->
-<div id="dialogueUI" style="
+#dialogueUI{
   position:fixed;
   width:100%;
   height:100%;
@@ -54,33 +49,35 @@
   flex-direction:column;
   justify-content:flex-end;
   z-index:9999;
-">
+}
 
-  <img id="characterSprite"
-       style="
-         position:absolute;
-         bottom:120px;
-         left:50%;
-         transform:translateX(-50%);
-         height:400px;
-       ">
+#characterSprite{
+  position:absolute;
+  bottom:120px;
+  left:50%;
+  transform:translateX(-50%);
+  height:400px;
+}
 
-  <div id="nameBox"
-       style="margin-left:50px;font-size:20px;color:#aaa;">
-  </div>
+#nameBox{
+  margin-left:50px;
+  font-size:20px;
+  color:#aaa;
+}
 
-  <div id="textBox"
-       style="
-         height:140px;
-         background:rgba(0,0,0,0.8);
-         padding:20px;
-         font-size:20px;
-         color:white;
-       ">
-  </div>
-</div>
-  <!-- 特殊イベントレイヤー（最上位） -->
-<div id="specialOverlay" style="
+#textBox{
+  height:140px;
+  background:rgba(0,0,0,0.8);
+  padding:20px;
+  font-size:20px;
+  color:white;
+}
+
+/* =============================
+   特殊イベントレイヤー
+============================= */
+
+#specialOverlay{
   position:fixed;
   top:0;
   left:0;
@@ -89,47 +86,39 @@
   display:none;
   z-index:10000;
   background:black;
-">
+}
 
-  <!-- 背景画像 -->
-  <img id="specialBg" style="
-    position:absolute;
-    width:100%;
-    height:100%;
-    object-fit:cover;
-  ">
+#specialBg{
+  position:absolute;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
 
-  <!-- キャラ -->
-  <img id="specialCharacter" style="
-    position:absolute;
-    bottom:120px;
-    left:50%;
-    transform:translateX(-50%);
-    height:400px;
-  ">
+#specialCharacter{
+  position:absolute;
+  bottom:120px;
+  left:50%;
+  transform:translateX(-50%);
+  height:400px;
+}
 
-  <!-- 名前 -->
-  <div id="specialName" style="
-    position:absolute;
-    bottom:180px;
-    left:40px;
-    color:#ccc;
-    font-size:22px;
-  "></div>
+#specialName{
+  position:absolute;
+  bottom:180px;
+  left:40px;
+  color:#ccc;
+  font-size:22px;
+}
 
-  <!-- テキスト -->
-  <div id="specialText" style="
-    position:absolute;
-    bottom:0;
-    width:100%;
-    height:140px;
-    background:rgba(0,0,0,0.85);
-    color:white;
-    font-size:24px;
-    padding:30px 40px;
-    box-sizing:border-box;
-  "></div>
-
-</div>
-</body>
-</html>
+#specialText{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:140px;
+  background:rgba(0,0,0,0.85);
+  color:white;
+  font-size:24px;
+  padding:30px 40px;
+  box-sizing:border-box;
+}

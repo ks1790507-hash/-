@@ -263,13 +263,22 @@ function handleTileEvent(x,y){
 // =====================
 // 描画
 // =====================
-
 function draw(){
 
   if(isMoving){
-    if(player.x < targetX) player.x += moveSpeed;
-    if(player.x > targetX) player.x -= moveSpeed;
-    if(player.y < targetY) player.y += moveSpeed;
+    let nextX = player.x;
+    let nextY = player.y;
+
+    if(player.x < targetX) nextX += moveSpeed;
+    if(player.x > targetX) nextX -= moveSpeed;
+    if(player.y < targetY) nextY += moveSpeed;
+    if(player.y > targetY) nextY -= moveSpeed;
+
+    if(canMove(nextX,nextY)){
+      player.x = nextX;
+      player.y = nextY;
+    }
+
     if(Math.abs(player.x-targetX)<=moveSpeed &&
        Math.abs(player.y-targetY)<=moveSpeed){
       player.x = targetX;
@@ -283,6 +292,40 @@ function draw(){
   }
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  // ===== カメラ計算 =====
+  cameraX = player.x - canvas.width/2 + player.size/2;
+  cameraY = player.y - canvas.height/2 + player.size/2;
+
+  cameraX = Math.max(0, Math.min(cameraX, mapWidth - canvas.width));
+  cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
+
+  // ===== マップ描画 =====
+  for(let row=0; row<mapData.length; row++){
+    for(let col=0; col<mapData[row].length; col++){
+
+      const tile = mapData[row][col];
+      const type = currentTileTypes[tile];
+
+      const x = col * TILE - cameraX;
+      const y = row * TILE - cameraY;
+
+      if(type?.color){
+        ctx.fillStyle = type.color;
+        ctx.fillRect(x,y,TILE,TILE);
+      }else{
+        ctx.fillStyle = "#ddd";
+        ctx.fillRect(x,y,TILE,TILE);
+      }
+    }
+  }
+
+  // ===== プレイヤー =====
+  ctx.fillStyle="blue";
+  ctx.fillRect(player.x-cameraX, player.y-cameraY, player.size, player.size);
+
+  requestAnimationFrame(draw);
+}
 
   // ===== マップ描画 =====
   for(let row=0; row<mapData.length; row++){

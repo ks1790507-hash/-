@@ -270,8 +270,6 @@ function draw(){
     if(player.x < targetX) player.x += moveSpeed;
     if(player.x > targetX) player.x -= moveSpeed;
     if(player.y < targetY) player.y += moveSpeed;
-    if(player.y > targetY) player.y -= moveSpeed;
-
     if(Math.abs(player.x-targetX)<=moveSpeed &&
        Math.abs(player.y-targetY)<=moveSpeed){
       player.x = targetX;
@@ -286,9 +284,26 @@ function draw(){
 
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  ctx.fillStyle="lightgray";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
+  // ===== マップ描画 =====
+  for(let row=0; row<mapData.length; row++){
+    for(let col=0; col<mapData[row].length; col++){
+      const tile = mapData[row][col];
+      const type = currentTileTypes[tile];
 
+      const x = col * TILE;
+      const y = row * TILE;
+
+      if(type?.color){
+        ctx.fillStyle = type.color;
+        ctx.fillRect(x,y,TILE,TILE);
+      }else{
+        ctx.fillStyle = "#ddd";
+        ctx.fillRect(x,y,TILE,TILE);
+      }
+    }
+  }
+
+  // ===== プレイヤー =====
   ctx.fillStyle="blue";
   ctx.fillRect(player.x,player.y,player.size,player.size);
 

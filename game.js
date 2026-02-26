@@ -263,6 +263,20 @@ function handleTileEvent(x,y){
 // =====================
 // 描画
 // =====================
+function canMove(newX,newY){
+  for(const b of blocks){
+    if(!b.solid) continue;
+
+    if(newX < b.x + b.size &&
+       newX + player.size > b.x &&
+       newY < b.y + b.size &&
+       newY + player.size > b.y){
+      return false;
+    }
+  }
+  return true;
+}
+
 function draw(){
 
   if(isMoving){

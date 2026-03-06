@@ -1,401 +1,66 @@
-// =====================
-// 基本設定
-// =====================
+function bucketFill(cx,cy){
 
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
-
-function resizeCanvas(){
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resizeCanvas);
-resizeCanvas();
-
-const TILE = 32;
-
-let mapData = [];
-let blocks = [];
-let currentEvents = {};
-let currentTileTypes = {};
-let mapWidth = 0;
-let mapHeight = 0;
-
-let cameraX = 0;
-let cameraY = 0;
-
-// =====================
-// プレイヤー
-// =====================
-
-const player = {
-  x:0,
-  y:0,
-  size:TILE,
-  color:"blue"
-};
-
-let targetX = 0;
-let targetY = 0;
-let isMoving = false;
-const moveSpeed = 8;
-
-// =====================
-// 通常会話システム
-// =====================
-
-let isTalking = false;
-let afterTalkCallback = null;
-
-const messageBox = document.getElementById("messageBox");
-
-let messageLines = [];
-let messageIndex = 0;
-
-function startTalk(lines, callback=null){
-  if(isTalking || !lines) return;
-
-  isTalking = true;
-  messageBox.style.display = "flex";
-
-  messageLines = lines;
-  messageIndex = 0;
-  afterTalkCallback = callback;
-
-  nextMessage();
+// セル単位で色を取得
+function getCellColor(x,y){
+let d=ctx.getImageData(x*cellSize,y*cellSize,1,1).data;
+return [d[0],d[1],d[2],d[3]];
 }
 
-function nextMessage(){
-  if(messageIndex >= messageLines.length){
-    endTalk();
-    return;
-  }
-
-  messageBox.innerHTML = messageLines[messageIndex];
-  messageIndex++;
+function fillCell(x,y,color){
+ctx.fillStyle=colorPicker.value;
+ctx.fillRect(x*cellSize,y*cellSize,cellSize,cellSize);
 }
 
-function endTalk(){
-  isTalking = false;
-  messageBox.style.display = "none";
-  messageBox.innerHTML = "";
+let target=getCellColor(cx,cy);
+let fill=parseColor(colorPicker.value);
 
-  if(afterTalkCallback){
-    const cb = afterTalkCallback;
-    afterTalkCallback = null;
-    cb();
-  }
+if(target[0]===fill[0] &&
+   target[1]===fill[1] &&
+   target[2]===fill[2]) return;
+
+let stack=[[cx,cy]];
+let visited=new Set();
+let region=[];
+let enclosed=true;
+
+while(stack.length){
+
+let [x,y]=stack.pop();
+let key=x+","+y;
+
+if(visited.has(key)) continue;
+visited.add(key);
+
+if(x<0||y<0||x>=gridSize||y>=gridSize){
+enclosed=false;
+continue;
 }
 
-// =====================
-// ぷよ風会話システム
-// =====================
+let c=getCellColor(x,y);
 
-let puyoMode = false;
-let puyoData = [];
-let puyoIndex = 0;
+if(c[0]!==target[0]||
+   c[1]!==target[1]||
+   c[2]!==target[2]||
+   c[3]!==target[3]) continue;
 
-const overlay = document.getElementById("specialOverlay");
-const bg = document.getElementById("specialBg");
-const leftChara = document.getElementById("leftCharacter");
-const rightChara = document.getElementById("rightCharacter");
-const puyoName = document.getElementById("puyoName");
-const puyoText = document.getElementById("puyoText");
+region.push([x,y]);
 
-function startWindowScene(){
-
-  puyoMode = true;
-  overlay.style.display = "block";
-  overlay.style.opacity = 0;
-
-  bg.src = "beach.png";
-
-  puyoData = [
-    {
-      name:"アルル",
-      text:"……ねぇ、聞こえる？",
-      side:"left",
-      image:"aruru_normal.png"
-    },
-    {
-      name:"ラフィーナ",
-      text:"ふふ、やっと来たわね。",
-      side:"right",
-      image:"raffina_smile.png"
-    },
-    {
-      name:"アルル",
-      text:"えっ！？ここはどこ！？",
-      side:"left",
-      image:"aruru_surprise.png"
-    },
-    {
-      name:"ラフィーナ",
-      text:"覚悟しなさい！",
-      side:"right",
-      image:"raffina_angry.png"
-    }
-  ];
-
-  puyoIndex = 0;
-
-  // フェードイン
-  let fade = 0;
-  const fadeIn = setInterval(()=>{
-    fade += 0.05;
-    overlay.style.opacity = fade;
-    if(fade >= 1){
-      clearInterval(fadeIn);
-      nextPuyo();
-    }
-  },16);
+// 端に触れたら囲まれていない
+if(x===0||y===0||x===gridSize-1||y===gridSize-1){
+enclosed=false;
 }
 
-function nextPuyo(){
-  if(puyoIndex >= puyoData.length){
-    endPuyo();
-    return;
-  }
-
-  const line = puyoData[puyoIndex];
-
-  puyoName.textContent = line.name;
-  puyoText.textContent = line.text;
-
-  if(line.side === "left"){
-    leftChara.src = line.image;
-    rightChara.style.filter = "brightness(0.5)";
-    leftChara.style.filter = "brightness(1)";
-  }else{
-    rightChara.src = line.image;
-    leftChara.style.filter = "brightness(0.5)";
-    rightChara.style.filter = "brightness(1)";
-  }
-
-  puyoIndex++;
+stack.push([x+1,y]);
+stack.push([x-1,y]);
+stack.push([x,y+1]);
+stack.push([x,y-1]);
 }
 
-function endPuyo(){
-  let fade = 1;
-  const fadeOut = setInterval(()=>{
-    fade -= 0.05;
-    overlay.style.opacity = fade;
-    if(fade <= 0){
-      clearInterval(fadeOut);
-      overlay.style.display = "none";
-      puyoMode = false;
-    }
-  },16);
+if(!enclosed) return;
+
+saveUndo();
+
+for(let [x,y] of region){
+fillCell(x,y,colorPicker.value);
 }
-
-// =====================
-// マップ読み込み
-// =====================
-
-function loadMap(name){
-  fetch("./"+name+".json")
-    .then(res=>res.json())
-    .then(data=>{
-      mapData = data.tiles;
-      currentEvents = data.events || {};
-      currentTileTypes = data.tileTypes || {};
-
-      mapWidth = mapData[0].length * TILE;
-      mapHeight = mapData.length * TILE;
-
-      player.x = data.spawn.x;
-      player.y = data.spawn.y;
-
-      targetX = player.x;
-      targetY = player.y;
-
-      createMap();
-    });
 }
-
-loadMap("map");
-
-function createMap(){
-  blocks = [];
-  for(let row=0; row<mapData.length; row++){
-    for(let col=0; col<mapData[row].length; col++){
-      const tile = mapData[row][col];
-      const type = currentTileTypes[tile];
-      if(type){
-        blocks.push({
-          x:col*TILE,
-          y:row*TILE,
-          size:TILE,
-          solid:type.solid,
-          tile:tile
-        });
-      }
-    }
-  }
-}
-
-// =====================
-// イベント処理
-// =====================
-
-function getTileAt(x,y){
-  const col = Math.floor((x+player.size/2)/TILE);
-  const row = Math.floor((y+player.size/2)/TILE);
-  return mapData[row]?.[col];
-}
-
-function handleTileEvent(x,y){
-  const tile = getTileAt(x,y);
-  if(!tile) return;
-
-  if(tile === "窓"){
-    startTalk(currentEvents[tile], ()=>{
-      startWindowScene();
-    });
-    return;
-  }
-
-  if(currentEvents[tile]){
-    startTalk(currentEvents[tile]);
-  }
-}
-
-// =====================
-// 描画
-// =====================
-function canMove(newX,newY){
-  for(const b of blocks){
-    if(!b.solid) continue;
-
-    if(newX < b.x + b.size &&
-       newX + player.size > b.x &&
-       newY < b.y + b.size &&
-       newY + player.size > b.y){
-      return false;
-    }
-  }
-  return true;
-}
-
-function draw(){
-
-  if(isMoving){
-    let nextX = player.x;
-    let nextY = player.y;
-
-    if(player.x < targetX) nextX += moveSpeed;
-    if(player.x > targetX) nextX -= moveSpeed;
-    if(player.y < targetY) nextY += moveSpeed;
-    if(player.y > targetY) nextY -= moveSpeed;
-
-    if(canMove(nextX,nextY)){
-      player.x = nextX;
-      player.y = nextY;
-    }
-
-    if(Math.abs(player.x-targetX)<=moveSpeed &&
-       Math.abs(player.y-targetY)<=moveSpeed){
-      player.x = targetX;
-      player.y = targetY;
-      isMoving = false;
-
-      if(!isTalking){
-        handleTileEvent(player.x, player.y);
-      }
-    }
-  }
-
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  // ===== カメラ計算 =====
-  cameraX = player.x - canvas.width/2 + player.size/2;
-  cameraY = player.y - canvas.height/2 + player.size/2;
-
-  cameraX = Math.max(0, Math.min(cameraX, mapWidth - canvas.width));
-  cameraY = Math.max(0, Math.min(cameraY, mapHeight - canvas.height));
-
-  // ===== マップ描画 =====
-  for(let row=0; row<mapData.length; row++){
-    for(let col=0; col<mapData[row].length; col++){
-
-      const tile = mapData[row][col];
-      const type = currentTileTypes[tile];
-
-      const x = col * TILE - cameraX;
-      const y = row * TILE - cameraY;
-
-      if(type?.color){
-        ctx.fillStyle = type.color;
-        ctx.fillRect(x,y,TILE,TILE);
-      }else{
-        ctx.fillStyle = "#ddd";
-        ctx.fillRect(x,y,TILE,TILE);
-      }
-    }
-  }
-
-  // ===== プレイヤー =====
-  ctx.fillStyle="blue";
-  ctx.fillRect(player.x-cameraX, player.y-cameraY, player.size, player.size);
-
-  requestAnimationFrame(draw);
-}
-
-  // ===== マップ描画 =====
-  for(let row=0; row<mapData.length; row++){
-    for(let col=0; col<mapData[row].length; col++){
-      const tile = mapData[row][col];
-      const type = currentTileTypes[tile];
-
-      const x = col * TILE;
-      const y = row * TILE;
-
-      if(type?.color){
-        ctx.fillStyle = type.color;
-        ctx.fillRect(x,y,TILE,TILE);
-      }else{
-        ctx.fillStyle = "#ddd";
-        ctx.fillRect(x,y,TILE,TILE);
-      }
-    }
-  }
-
-  // ===== プレイヤー =====
-  ctx.fillStyle="blue";
-  ctx.fillRect(player.x,player.y,player.size,player.size);
-
-  requestAnimationFrame(draw);
-}
-draw();
-
-// =====================
-// キー操作
-// =====================
-
-document.addEventListener("keydown", e=>{
-
-  if(puyoMode){
-    if(e.code==="Space") nextPuyo();
-    if(e.code==="KeyT") endPuyo();
-    return;
-  }
-
-  if(isTalking){
-    if(e.code==="Space") nextMessage();
-    return;
-  }
-
-  if(isMoving) return;
-
-  let newX = player.x;
-  let newY = player.y;
-
-  if(e.key==="ArrowUp") newY -= TILE;
-  if(e.key==="ArrowDown") newY += TILE;
-  if(e.key==="ArrowLeft") newX -= TILE;
-  if(e.key==="ArrowRight") newX += TILE;
-
-  targetX = newX;
-  targetY = newY;
-  isMoving = true;
-});

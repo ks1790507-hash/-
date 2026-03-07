@@ -29,7 +29,7 @@
    "前": {
       "color": "black",
       "solid": true,
-      "warp": { "map": "hallway", "x": 1792, "y": 32 }
+      "warp": { "map": "", "x": 1792, "y": 32 }
 
     }
 },
